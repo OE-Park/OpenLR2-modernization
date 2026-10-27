@@ -14,6 +14,15 @@ ACCEPTANCE.md의 "공통 기능" 항목 중 chart 입력으로 검사할 수 있
 
 둘 다 Python 3 표준 라이브러리만 쓴다. 외부 패키지 없음.
 
+Windows 실기기 실행용 보조 파일은 [windows/](windows/)에 둔다.
+
+| 파일 | 역할 |
+|---|---|
+| `windows/qa01-autoplay.ps1` | 원본·포크에 chart를 `<chart> -a -ns`로 직접 자동 플레이. 판마다 창·오류창·종료 코드·주기 캡처·`Log.txt` 기록. 대화형 세션 전용(SSH에서는 디스플레이가 `WinDisc 0x0`이라 원본은 즉시 종료, 포크는 0 나누기로 죽는다) |
+| `windows/d3d9probe.cpp` | 모니터 열거 순서와 D3D9 어댑터 순서 출력. `cl /EHsc d3d9probe.cpp` |
+
+결과 기록은 [results/](results/)에 둔다.
+
 ## 생성기 실행
 
 ```bash

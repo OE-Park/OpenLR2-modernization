@@ -56,6 +56,7 @@
 | Windows ARM64 정적 감사 | DxLib·CMake·런타임 DLL 소스 조사 완료. 빌드·실행 미실행 |
 | Ghidra 복원·프로그램 digest 일치 | 미검증 |
 | Windows x64 빌드·기동 | configure/build exit 0, `OpenLR2_x64.exe`·`fmod.dll` Machine 0x8664, 콘솔 세션 타이틀 화면 도달(사용자 육안)·exit 0. 게임플레이·원본 비교 미검증 |
+| QA-01 직접 자동 플레이(원본/포크) | 17 chart 로드·완주, 읽은 15쌍 콤보 일치. 다중 모니터 비주모니터 전체 화면에서 포크 크래시(`DrawMemImg`), 단일 모니터 대조 실행 무크래시. 판정·리플레이·키음·선곡 화면 미검증. [결과](docs/preparation/qa/results/2026-10-27-qa01-autoplay.md) |
 | Windows ARM64 네이티브 빌드·입력·오디오 | 미실행 |
 | macOS arm64 빌드·입력·오디오 | 미실행 |
 | 누수량·수정·반복 측정 | 미실행 |
