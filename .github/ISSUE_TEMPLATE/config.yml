@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Roadmap board / 로드맵 보드 / ロードマップ
+    url: https://github.com/users/OE-Park/projects/2
+    about: Planned work and status (KO/JA/EN per card)

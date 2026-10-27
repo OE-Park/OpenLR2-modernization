@@ -3,6 +3,26 @@
 Rewritten source code of BMS player Lunatic Rave 2. Project started in January 2021.
 Original code accessible at [LR2Beta3-v100201](https://github.com/GOMazk/OpenLR2/tree/LR2Beta3-v100201)
 
+<!-- fork-status:start -->
+## Fork status (OE-Park/OpenLR2-modernization)
+
+- EN: Modernization work on this fork: Windows 11 x64 baseline, memory leaks, 4K, macOS arm64, Windows ARM64 (lowest priority).
+- KO: 이 포크의 현대화 작업: Windows 11 x64 기준 확보, 메모리 누수, 4K, macOS arm64, Windows ARM64(최후순위).
+- JA: このフォークのモダナイズ作業: Windows 11 x64 の基準確保、メモリリーク、4K、macOS arm64、Windows ARM64(最後の優先度)。
+
+Board: [OpenLR2 Modernization](https://github.com/users/OE-Park/projects/2) · [In Progress (3)](https://github.com/users/OE-Park/projects/2/views/1?filterQuery=status%3A%22In+Progress%22) · [Todo (15)](https://github.com/users/OE-Park/projects/2/views/1?filterQuery=status%3A%22Todo%22) · [Done (1)](https://github.com/users/OE-Park/projects/2/views/1?filterQuery=status%3A%22Done%22)
+
+In progress:
+
+| Task | Phase | Platform | Title |
+|---|---|---|---|
+| QA-01 | P0 | Common | Synthetic chart/skin baseline scenarios |
+| RE-01 | P0 | Common | Original binary PE imports & GAR restore |
+| WIN-01 | P0 | Win x64 | Windows 11 x64 baseline build (VS 2026) |
+
+<sub>Generated 2026-10-27 (KST) from the project board by `docs/preparation/scripts/update-readme-status.py`. Details per card are in Korean, Japanese and English.</sub>
+<!-- fork-status:end -->
+
 ## Open source?
 
 After the closure of LR2IR, the project has been made public.

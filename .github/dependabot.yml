@@ -1,0 +1,9 @@
+version: 2
+updates:
+  # vcpkg is pinned by commit in build.yml and vcpkg-configuration.json; Dependabot does not cover it.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    labels:
+      - "area: build"

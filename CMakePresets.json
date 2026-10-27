@@ -52,6 +52,21 @@
       "cacheVariables": {
         "CMAKE_CXX_FLAGS_INIT": "/MP /arch:IA32 /W4 /we4840 /wo4244 /permissive- /fsanitize=address"
       }
+    },
+    {
+      "name": "windows-vs2026-x64",
+      "inherits": "windows-vs-x64",
+      "generator": "Visual Studio 18 2026"
+    },
+    {
+      "name": "windows-vs2026-x64-asan",
+      "inherits": "windows-vs-x64-asan",
+      "generator": "Visual Studio 18 2026"
+    },
+    {
+      "name": "windows-vs2026-x86",
+      "inherits": "windows-vs-x86",
+      "generator": "Visual Studio 18 2026"
     }
   ],
   "buildPresets": [
@@ -89,6 +104,30 @@
       "name": "windows-vs-x86-relwithdebinfo",
       "configurePreset": "windows-vs-x86",
       "displayName": "x86 RelWithDebInfo",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "windows-vs2026-x64-asan-debug",
+      "configurePreset": "windows-vs2026-x64-asan",
+      "displayName": "VS 2026 x64 Debug (ASAN)",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows-vs2026-x64-debug",
+      "configurePreset": "windows-vs2026-x64",
+      "displayName": "VS 2026 x64 Debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows-vs2026-x64-relwithdebinfo",
+      "configurePreset": "windows-vs2026-x64",
+      "displayName": "VS 2026 x64 RelWithDebInfo",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "windows-vs2026-x86-relwithdebinfo",
+      "configurePreset": "windows-vs2026-x86",
+      "displayName": "VS 2026 x86 RelWithDebInfo",
       "configuration": "RelWithDebInfo"
     }
   ]
