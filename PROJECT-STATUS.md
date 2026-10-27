@@ -14,7 +14,7 @@
 
 | 항목 | 값 |
 |---|---|
-| 포크 | https://github.com/OE-Park/OpenLR2.git |
+| 포크 | https://github.com/OE-Park/OpenLR2-modernization.git (2026-10-27 `OpenLR2` → `OpenLR2-forked` → 현재 이름으로 변경) |
 | 로컬 | 작업자 로컬 클론 |
 | 작업 브랜치 | `prep/platform-modernization` |
 | 조사한 소스 HEAD | `521df1396a8fa4550fc31b74e8a8de859342bcc0` |

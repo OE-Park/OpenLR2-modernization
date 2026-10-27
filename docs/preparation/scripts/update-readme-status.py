@@ -42,7 +42,7 @@ def render(items):
                     key=lambda i: (i.get("phase", ""), i.get("task ID", "")))
     lines = [
         START,
-        "## Fork status (OE-Park/OpenLR2)",
+        "## Fork status (OE-Park/OpenLR2-modernization)",
         "",
         "- EN: Modernization work on this fork: Windows 11 x64 baseline, memory leaks, 4K, macOS arm64, Windows ARM64 (lowest priority).",
         "- KO: 이 포크의 현대화 작업: Windows 11 x64 기준 확보, 메모리 누수, 4K, macOS arm64, Windows ARM64(최후순위).",
