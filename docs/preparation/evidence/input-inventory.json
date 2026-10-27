@@ -1,0 +1,185 @@
+{
+  "scope": "Python stdlib ZIP/XML/PE-header inventory; not REA Evidence or runtime verification",
+  "archives": [
+    {
+      "filename": "OpenLR2_2026_06_27_small.gar",
+      "bytes": 52669488,
+      "sha256": "50a7943b314f8b6058c4449bfbad3e2a8bddc99419027c27a607782ba7f6093d",
+      "members": [
+        {
+          "path": "idata\\00\\00000000.prp",
+          "bytes": 498,
+          "sha256": "fbee86274917613007b6e13a663eaf7436fae99b1a28939a424a3b2212ac1494",
+          "declared_properties": {
+            "CONTENT_TYPE": "Program",
+            "PARENT": "/",
+            "FILE_ID": "191f9d4a306a1185565551953300",
+            "FILE_TYPE": "0",
+            "READ_ONLY": "false",
+            "NAME": "LR2.exe"
+          }
+        },
+        {
+          "path": "idata\\03\\00000032.prp",
+          "bytes": 506,
+          "sha256": "82426a1bab0e16309c456e18483dacadc91cb8c4218fdcf508405cf8144023c1",
+          "declared_properties": {
+            "CONTENT_TYPE": "Program",
+            "PARENT": "/",
+            "FILE_ID": "191f9d4a26d82224991469410400",
+            "FILE_TYPE": "0",
+            "READ_ONLY": "false",
+            "NAME": "LR2body.exe.1.1"
+          }
+        },
+        {
+          "path": "idata\\05\\0000005b.prp",
+          "bytes": 494,
+          "sha256": "8211636b248e45815f00b00b3a96a12f53821bf28e36829c064ad5de5f60d36a",
+          "declared_properties": {
+            "CONTENT_TYPE": "Archive",
+            "PARENT": "/",
+            "FILE_ID": "6e2ead66251f3157109870693000",
+            "FILE_TYPE": "0",
+            "READ_ONLY": "false",
+            "NAME": "LR2"
+          }
+        },
+        {
+          "path": "user\\00\\00000002.prp",
+          "bytes": 531,
+          "sha256": "06a83f2995f6f1f5d2621bed9096d5e835586738e87659cf9abf4ee996dc039c",
+          "declared_properties": {
+            "CONTENT_TYPE": "ProgramUserData",
+            "PARENT": "/",
+            "FILE_ID": "191f9d4a37f13272645561013500",
+            "FILE_TYPE": "0",
+            "READ_ONLY": "false",
+            "NAME": "udf_191f9d4a26d82224991469410400"
+          }
+        }
+      ],
+      "member_count": 23,
+      "expanded_bytes": 181054131,
+      "crc_validation_bad_member": null
+    },
+    {
+      "filename": "LR2_100201.zip",
+      "bytes": 54143938,
+      "sha256": "34294ea6661b232071688a93de31631e4e8114a82314d3386541e6875a74ff41",
+      "members": [
+        {
+          "path": "LR2beta3/fmodex.dll",
+          "bytes": 333312,
+          "sha256": "aad23230f7aac55d48d0c61424598ca4f01926e21e8e476a27b9534cd93b93b6",
+          "pe_header": {
+            "machine_hex": "0x14c",
+            "architecture": "x86",
+            "optional_header_magic": "0x10b"
+          }
+        },
+        {
+          "path": "LR2beta3/LR2.exe",
+          "bytes": 875520,
+          "sha256": "ba3c5701970ccdb1e439c6ddd07597baad2f30a0620ad9bbc8b2060e1f141372",
+          "pe_header": {
+            "machine_hex": "0x14c",
+            "architecture": "x86",
+            "optional_header_magic": "0x10b"
+          }
+        },
+        {
+          "path": "LR2beta3/LR2body.exe",
+          "bytes": 3768320,
+          "sha256": "a46ef15343e41d3411771c83ac7b0c42d95e5f473db69c6b45a9584c07e94480",
+          "pe_header": {
+            "machine_hex": "0x14c",
+            "architecture": "x86",
+            "optional_header_magic": "0x10b"
+          }
+        },
+        {
+          "path": "LR2beta3/LR2files/caldix/caldix.exe",
+          "bytes": 77312,
+          "sha256": "c4fae66af2f5911cbacc4a81b9577d8d8aa7d0004ab07124224bdee4952a50ef",
+          "pe_header": {
+            "machine_hex": "0x14c",
+            "architecture": "x86",
+            "optional_header_magic": "0x10b"
+          }
+        },
+        {
+          "path": "LR2beta3/LR2files/âXâLâôè╓ÿAâhâLâàâüâôâg/DxaDecode.exe",
+          "bytes": 57344,
+          "sha256": "31076dc3b209229f4e9931c8fa06869ed699e3297e12c56970c219333e9175e2",
+          "pe_header": {
+            "machine_hex": "0x14c",
+            "architecture": "x86",
+            "optional_header_magic": "0x10b"
+          }
+        },
+        {
+          "path": "LR2beta3/LR2files/âXâLâôè╓ÿAâhâLâàâüâôâg/DxaEncode.exe",
+          "bytes": 61440,
+          "sha256": "cd40b15c6827b6c0f1c79b7b6ed97bfd5bd9e0021b4fedfdf46219de4df1d78e",
+          "pe_header": {
+            "machine_hex": "0x14c",
+            "architecture": "x86",
+            "optional_header_magic": "0x10b"
+          }
+        },
+        {
+          "path": "LR2beta3/LR2files/âXâLâôè╓ÿAâhâLâàâüâôâg/FontUtil/FontUtil.exe",
+          "bytes": 113664,
+          "sha256": "e814074d1bc9be8bd193977fc2a0bfd9cfcad80163af64af1e343dee53d23576",
+          "pe_header": {
+            "machine_hex": "0x14c",
+            "architecture": "x86",
+            "optional_header_magic": "0x10b"
+          }
+        }
+      ],
+      "member_count": 435,
+      "expanded_bytes": 95501580,
+      "crc_validation_bad_member": null
+    }
+  ],
+  "vendored_binaries": [
+    {
+      "path": "dep/FMOD/bin64/fmod.dll",
+      "sha256": "5767ca882f50d0abba364c00cb238426943841b483a95ac94d41130b637dd483",
+      "pe_header": {
+        "machine_hex": "0x8664",
+        "architecture": "x64",
+        "optional_header_magic": "0x20b"
+      }
+    },
+    {
+      "path": "dep/FMOD/bin64/fmodL.dll",
+      "sha256": "c3df41ac945ee2d927a4665e637cb841a2d49b841d48f80d66759676a97facfd",
+      "pe_header": {
+        "machine_hex": "0x8664",
+        "architecture": "x64",
+        "optional_header_magic": "0x20b"
+      }
+    },
+    {
+      "path": "dep/FMOD/bin86/fmod.dll",
+      "sha256": "a5b8b58f63990477fa6c163ec3f35fcde2fad9b8d13a3ce7ed1d1207e8a96ded",
+      "pe_header": {
+        "machine_hex": "0x14c",
+        "architecture": "x86",
+        "optional_header_magic": "0x10b"
+      }
+    },
+    {
+      "path": "dep/FMOD/bin86/fmodL.dll",
+      "sha256": "3c0be1cfe26ea0b337d593c58f4e525c677811518d3ff52531c192cd9d3324b6",
+      "pe_header": {
+        "machine_hex": "0x14c",
+        "architecture": "x86",
+        "optional_header_magic": "0x10b"
+      }
+    }
+  ]
+}

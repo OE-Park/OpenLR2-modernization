@@ -1,0 +1,250 @@
+{
+  "date": "2026-10-27",
+  "rea_commit": "443d0778be5922b6ef0e522805ac4002da5edf19",
+  "rea_version": "6.8.0",
+  "node_version": "24.22.1",
+  "build": "npm ci and npm run build:cached exit 0; 3 build tasks successful",
+  "doctor": {
+    "exit_code": 1,
+    "healthy": false,
+    "scope_checks": [
+      {
+        "name": "node",
+        "ok": true,
+        "classification": "healthy"
+      },
+      {
+        "name": "registration:codex",
+        "ok": false,
+        "classification": "config_drift"
+      }
+    ],
+    "ghidra": "GHIDRA_INSTALL_DIR is not set"
+  },
+  "records": [
+    {
+      "target": "LR2body.exe",
+      "sha256": "a46ef15343e41d3411771c83ac7b0c42d95e5f473db69c6b45a9584c07e94480",
+      "evidence_id": "ev_921253abd790352214a9b09f3c6ab02516dee0cc41b9a21290b3f42a735d1cd1",
+      "provider": {
+        "id": "rea-pe-imports",
+        "name": "REA PE import parser",
+        "version": "1"
+      },
+      "architecture": "386",
+      "coverage": {
+        "status": "complete",
+        "reason": null,
+        "examined_dlls": 14,
+        "imports": 370,
+        "delay_imports": 0
+      },
+      "issues": [],
+      "imports": [
+        {
+          "dll": "fmodex.dll",
+          "function_count": 41
+        },
+        {
+          "dll": "KERNEL32.dll",
+          "function_count": 144
+        },
+        {
+          "dll": "USER32.dll",
+          "function_count": 86
+        },
+        {
+          "dll": "GDI32.dll",
+          "function_count": 19
+        },
+        {
+          "dll": "SHELL32.dll",
+          "function_count": 5
+        },
+        {
+          "dll": "ole32.dll",
+          "function_count": 6
+        },
+        {
+          "dll": "COMCTL32.dll",
+          "function_count": 1
+        },
+        {
+          "dll": "WINMM.dll",
+          "function_count": 14
+        },
+        {
+          "dll": "WSOCK32.dll",
+          "function_count": 19
+        },
+        {
+          "dll": "IMM32.dll",
+          "function_count": 9
+        },
+        {
+          "dll": "MSACM32.dll",
+          "function_count": 8
+        },
+        {
+          "dll": "AVIFIL32.dll",
+          "function_count": 13
+        },
+        {
+          "dll": "MSVFW32.dll",
+          "function_count": 2
+        },
+        {
+          "dll": "ADVAPI32.dll",
+          "function_count": 3
+        }
+      ],
+      "delay_imports": [],
+      "imphash": {
+        "algorithm": "pefile",
+        "md5": "72c73b9b7f9c5dd3618e6b8ab97fc2d3",
+        "reason": null
+      },
+      "limitations": [
+        "Rows reproduce the PE import and delay-load directories; they do not establish that an import is bound, forwarded or reachable at runtime.",
+        "Bound import snapshots, the import address table as loaded, and export-forward resolution in another DLL remain unobserved."
+      ]
+    },
+    {
+      "target": "LR2.exe",
+      "sha256": "ba3c5701970ccdb1e439c6ddd07597baad2f30a0620ad9bbc8b2060e1f141372",
+      "evidence_id": "ev_8bd72187b4190b43731e5b3a6ff1b1d238c9f2b436c9efaa186ffaf845faa4ad",
+      "provider": {
+        "id": "rea-pe-imports",
+        "name": "REA PE import parser",
+        "version": "1"
+      },
+      "architecture": "386",
+      "coverage": {
+        "status": "complete",
+        "reason": null,
+        "examined_dlls": 17,
+        "imports": 370,
+        "delay_imports": 2
+      },
+      "issues": [],
+      "imports": [
+        {
+          "dll": "fmodex.dll",
+          "function_count": 6
+        },
+        {
+          "dll": "MSVFW32.dll",
+          "function_count": 1
+        },
+        {
+          "dll": "KERNEL32.dll",
+          "function_count": 152
+        },
+        {
+          "dll": "USER32.dll",
+          "function_count": 110
+        },
+        {
+          "dll": "GDI32.dll",
+          "function_count": 31
+        },
+        {
+          "dll": "MSIMG32.dll",
+          "function_count": 2
+        },
+        {
+          "dll": "COMDLG32.dll",
+          "function_count": 1
+        },
+        {
+          "dll": "WINSPOOL.DRV",
+          "function_count": 3
+        },
+        {
+          "dll": "ADVAPI32.dll",
+          "function_count": 9
+        },
+        {
+          "dll": "SHELL32.dll",
+          "function_count": 6
+        },
+        {
+          "dll": "COMCTL32.dll",
+          "function_count": 1
+        },
+        {
+          "dll": "SHLWAPI.dll",
+          "function_count": 7
+        },
+        {
+          "dll": "ole32.dll",
+          "function_count": 4
+        },
+        {
+          "dll": "OLEAUT32.dll",
+          "function_count": 3
+        },
+        {
+          "dll": "gdiplus.dll",
+          "function_count": 22
+        },
+        {
+          "dll": "WININET.dll",
+          "function_count": 12
+        }
+      ],
+      "delay_imports": [
+        {
+          "dll": "OLEACC.dll",
+          "function_count": 2
+        }
+      ],
+      "imphash": {
+        "algorithm": "pefile",
+        "md5": "e23804c91252b3d05f00dcce3ab0de72",
+        "reason": null
+      },
+      "limitations": [
+        "Rows reproduce the PE import and delay-load directories; they do not establish that an import is bound, forwarded or reachable at runtime.",
+        "Bound import snapshots, the import address table as loaded, and export-forward resolution in another DLL remain unobserved."
+      ]
+    }
+  ],
+  "scope": "Static declared PE imports only; no native execution, no decompilation, no leak or display measurement.",
+  "archive_records": [
+    {
+      "target": "OpenLR2_2026_06_27_small.gar",
+      "sha256": "50a7943b314f8b6058c4449bfbad3e2a8bddc99419027c27a607782ba7f6093d",
+      "parent_evidence_id": "ev_00d5f93916e6bc0b9345bb4a117dd5fc9a97883d828cf293007c57109b83898b",
+      "summary_evidence_id": "ev_0821a118d832a504e5f5a42b09601716148cef3ba2ad61178e01547cc9717dba",
+      "view_coverage": {
+        "status": "complete-within-view",
+        "examined": 68,
+        "total": 68,
+        "next_offset": null,
+        "exhausted": true
+      },
+      "limitations": [
+        "Inspection derives bounded static hypotheses and next probes; it does not execute the artifact or claim format-specific semantics.",
+        "ZIP inventory lists central-directory entries only. Non-entry bytes, including leading bytes before the first entry such as a self-extractor stub, an APK Signing Block before the central directory or a ZIP comment after it, are not occurrences."
+      ]
+    },
+    {
+      "target": "LR2_100201.zip",
+      "sha256": "34294ea6661b232071688a93de31631e4e8114a82314d3386541e6875a74ff41",
+      "parent_evidence_id": "ev_c46de6dc1a2f1b71a105c8b5761484647b88b3929f869acf215520df594dd706",
+      "summary_evidence_id": "ev_501b391a9355f89151492b444188b9a93048988c3d922ce15d724930ca16d071",
+      "view_coverage": {
+        "status": "complete-within-view",
+        "examined": 1307,
+        "total": 1307,
+        "next_offset": null,
+        "exhausted": true
+      },
+      "limitations": [
+        "Inspection derives bounded static hypotheses and next probes; it does not execute the artifact or claim format-specific semantics.",
+        "ZIP inventory lists central-directory entries only. Non-entry bytes, including leading bytes before the first entry such as a self-extractor stub, an APK Signing Block before the central directory or a ZIP comment after it, are not occurrences."
+      ]
+    }
+  ]
+}
