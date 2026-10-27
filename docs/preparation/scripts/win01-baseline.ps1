@@ -16,8 +16,9 @@
       h. summary table + result.json; non-zero exit if a mandatory step failed
 
     Assumptions (not verified by this script):
-      - Visual Studio 2022 with the C++ desktop workload is installed.
-      - CMake >= 3.29 and git are on PATH.
+      - Visual Studio 2026 (Community is enough) with the C++ desktop workload is installed.
+        The VS major is taken from the preset's generator; pass -Preset windows-vs-x64 for VS 2022.
+      - CMake >= 3.29 and git are on PATH; the cmake on PATH must offer the preset's generator (upstream 4.2+ for VS 2026).
       - Network is reachable: the script itself only runs `git clone` for vcpkg, but
         vcpkg bootstrap and the vcpkg manifest install triggered by `cmake --preset`
         download the vcpkg binary and port sources on their own.
@@ -33,8 +34,8 @@ param(
     [string]$ZipPath,
     [string]$WorkRoot,
     [string]$VcpkgRoot,
-    [string]$Preset = 'windows-vs-x64',
-    [string]$BuildPreset = 'windows-vs-x64-relwithdebinfo',
+    [string]$Preset = 'windows-vs2026-x64',
+    [string]$BuildPreset = 'windows-vs2026-x64-relwithdebinfo',
     [string]$ExeName = 'OpenLR2_x64.exe',
     [string]$FmodRelPath = 'dep\FMOD\bin64\fmod.dll',
     [string]$VcpkgCommit = 'cd61e1e26a038e82d6550a3ebbe0fbbfe7da78e3',
@@ -222,6 +223,23 @@ function Get-ExpectedMember {
     return $null
 }
 
+function Get-PresetGenerator {
+    # Resolve the configure preset's generator, following "inherits" (string or array) depth-first.
+    param([string]$Name)
+    $presets = Get-Content (Join-Path $RepoRoot 'CMakePresets.json') -Raw | ConvertFrom-Json -AsHashtable
+    $byName = @{}
+    foreach ($p in $presets['configurePresets']) { $byName[$p['name']] = $p }
+    $queue = [System.Collections.Generic.List[string]]::new(); $queue.Add($Name)
+    while ($queue.Count -gt 0) {
+        $n = $queue[0]; $queue.RemoveAt(0)
+        if (-not $byName.ContainsKey($n)) { throw "configure preset '$n' not found in CMakePresets.json" }
+        $p = $byName[$n]
+        if ($p.ContainsKey('generator')) { return $p['generator'] }
+        if ($p.ContainsKey('inherits')) { @($p['inherits']) | ForEach-Object { $queue.Add($_) } }
+    }
+    throw "configure preset '$Name' has no generator"
+}
+
 # ---------------------------------------------------------------- steps
 function Step-Environment {
     $envInfo = [ordered]@{}
@@ -270,15 +288,31 @@ function Step-Environment {
         Write-Info ("cmake: {0}" -f $ver)
     }
 
+    # The preset's generator decides which VS major is required ("Visual Studio 18 2026" -> [18.0,19.0)).
+    $generator = Get-PresetGenerator $Preset
+    if ($generator -notmatch '^Visual Studio (\d+) (\d{4})$') { throw "preset '$Preset' uses '$generator'; this script only handles Visual Studio generators" }
+    $vsMajor = [int]$Matches[1]; $vsLabel = "Visual Studio $($Matches[2])"
+    $vsRange = '[{0}.0,{1}.0)' -f $vsMajor, ($vsMajor + 1)
+    $envInfo.generator = [ordered]@{ preset = $Preset; name = $generator; vsVersionRange = $vsRange; supportedByCmake = $null }
+    Write-Info ("gen : {0} (VS {1})" -f $generator, $vsRange)
+    if ($null -ne $cmakeCmd) {
+        # A CMake that predates the generator fails configure with a vague message; check up front instead.
+        try {
+            $caps = (Invoke-Native cmake @('-E', 'capabilities')).Output -join "`n" | ConvertFrom-Json -AsHashtable
+            $envInfo.generator.supportedByCmake = [bool](@($caps['generators'] | Where-Object { $_['name'] -eq $generator }).Count)
+            if (-not $envInfo.generator.supportedByCmake) { $failures.Add("cmake $($envInfo.cmake.version) does not offer generator '$generator' (upstream CMake added Visual Studio 18 2026 in 4.2)") }
+        } catch { Write-Warn ("cmake -E capabilities failed: {0}" -f $_.Exception.Message) }
+    }
+
     $vswhere = 'C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe'
     $envInfo.visualStudio = $null
-    if (-not (Test-Path $vswhere)) { $failures.Add("vswhere.exe not found at $vswhere (Visual Studio 2022 not installed?)") }
+    if (-not (Test-Path $vswhere)) { $failures.Add("vswhere.exe not found at $vswhere ($vsLabel not installed?)") }
     else {
-        $vsJson = (Invoke-Native $vswhere @('-latest', '-products', '*', '-version', '[17.0,18.0)',
+        $vsJson = (Invoke-Native $vswhere @('-latest', '-products', '*', '-version', $vsRange,
             '-requires', 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64', '-format', 'json', '-utf8')).Output -join "`n"
         $vsList = @()
         if ($vsJson.Trim()) { $vsList = @($vsJson | ConvertFrom-Json -AsHashtable) }
-        if ($vsList.Count -eq 0) { $failures.Add('no Visual Studio 2022 instance with Microsoft.VisualStudio.Component.VC.Tools.x86.x64 found') }
+        if ($vsList.Count -eq 0) { $failures.Add("no $vsLabel instance with Microsoft.VisualStudio.Component.VC.Tools.x86.x64 found") }
         else {
             $vs = $vsList[0]
             $envInfo.visualStudio = [ordered]@{

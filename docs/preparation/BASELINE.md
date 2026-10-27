@@ -8,7 +8,7 @@
 | 근거 | 확인한 내용 | 의미 |
 |---|---|---|
 | `CMakeLists.txt` | CMake 3.29 이상, C/C++, 앱은 C++23 | 기존 CMake를 빌드 기준 후보로 유지 |
-| `CMakePresets.json` | Windows VS 2022 x86/x64와 ASan preset | ARM64·Apple preset 없음 |
+| `CMakePresets.json` | Windows VS 2022 x86/x64와 ASan preset. 2026-10-27 생성기만 바꾼 `windows-vs2026-*` preset 추가(조사 HEAD 이후 변경) | ARM64·Apple preset 없음 |
 | `.github/workflows/build.yml` | Windows 2022 x86/x64 빌드·산출물 업로드 | 실행·누수·4K 검증은 없음 |
 | `CMakeLists.txt` FMOD 분기 | WIN32·LINUX만 처리, 그 외 fatal error | 현재 구성에 macOS FMOD 경로 없음 |
 | `CMakeLists.txt` DxLib 분기 | Windows 소스 또는 Linux OpenAL/EGL/GL/X11 경로 | Linux 경로를 macOS 지원으로 간주할 수 없음 |

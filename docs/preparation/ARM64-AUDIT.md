@@ -49,6 +49,7 @@ A를 고치면 영향받는 소비자: `WinData.UseMMXFlag/UseSSEFlag/UseSSE2Fla
 
 ## 기타 의존성
 
+- `LR2/LR2_customir.cpp:32` CustomIR 모듈 파일명 접미사를 `_WIN64 || __x86_64__`로 고른다. ARM64 Windows는 `_WIN64`라 `.x64` 모듈을 찾고(x64 DLL은 ARM64 프로세스에 로드 불가), macOS arm64는 둘 다 아니라 `.x86`을 찾는다. ARM64에서 IR을 허용할 경우 `.arm64` 접미사 분기가 필요하다(IR-01).
 - `dep/sqlite/sqlite3.c:15598-15602` 바이트 순서 판별에 `_M_ARM64` 포함. 문제 없음.
 - `dep/md5`, `dep/tinyxml`: 아키텍처 매크로·asm 없음.
 - `dep/dxlib-for-linux`: 패치 파일만 있고 DxLib 소스·`libDxLib.a`·`libfmod.so`가 없다. Linux 빌드는 현재 바로 되지 않는다.
@@ -66,7 +67,7 @@ fmod.com은 JS 앱이라 headless 브라우저로 렌더해서 읽었다. 그 �
 | DxLib 버전 | 최신 3.25a(2026-08-23). vendored 3.24f는 2025-03-21, 한 릴리스 뒤 | | 확인 | dxlog.html |
 | DxLib 라이선스 | 수정·재배포 허용. 소스/라이브러리 재배포 시 "DX Library Copyright (C) 2001-2026 Takumi Yamada." + 사용 기능의 서드파티 고지 동봉. 라이선스 비용 없음, 크레딧 의무 없음 | 동일 | 확인 | dxlib.xsrv.jp/dxlicense.html, dep/DxLib/DxLib.txt |
 | vcpkg 9개 포트 (libjpeg-turbo, libogg, libpng, libtheora, libvorbis, opus, opusfile, tiff, zlib) | `arm64-windows`는 비커뮤니티·CI 대상 triplet. 9개 모두 `ci.baseline.txt`에 fail/skip 항목 없음 = CI 통과 기대 | `arm64-osx`가 macOS 유일 CI triplet. 9개 모두 항목 없음 | 확인(CI 기대값). 실제 빌드는 안 함 | microsoft/vcpkg master ci.baseline.txt, triplets/, azure-pipelines.yml |
-| MSVC · CMake | VS 2022 17.4+ 네이티브 ARM64 툴셋. CMake `Visual Studio 17 2022` 제너레이터 `-A ARM64` | | 확인 | learn.microsoft.com, cmake.org |
+| MSVC · CMake | VS 2022 17.4+ 네이티브 ARM64 툴셋. CMake `Visual Studio 17 2022` 제너레이터 `-A ARM64`. 로컬 기준 VS 2026(v145)은 `Visual Studio 18 2026` 생성기(CMake 4.2+)가 `-A ARM64`를 받는다. ARM64 빌드 도구는 VS 설치 관리자의 별도 구성 요소 | | 확인 | learn.microsoft.com, cmake.org |
 
 참고: `vcpkg.json`에 `libtheora`가 두 번 적혀 있다. 동작에는 영향 없고 정리 대상이다.
 
