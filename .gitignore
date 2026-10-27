@@ -402,3 +402,4 @@ FodyWeavers.xsd
 
 # Local reference releases, analysis databases, captures and player data
 /.local/
+/.playwright-mcp/

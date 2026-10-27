@@ -50,6 +50,18 @@ Downloads의 두 파일은 읽기만 수행했다. CRC 결과·정확한 SHA-256
 - `.gar` 안의 역슬래시 경로를 일반 unzip으로 풀어 `.gpr/.rep` 복원이라고 보고하지 않는다. Ghidra의 프로젝트 복원 기능을 사용해야 한다.
 - 입력 명세는 Python 표준 라이브러리로 만든 정적 조사 자료다. 별도의 [REA 요약](evidence/rea-summary.json)에 실제 PE import Evidence ID가 있다. Ghidra 함수 분석·런타임 관찰은 아직 없다.
 
+## 원본 디컴파일 소스와 포크의 비교 (2026-10-27)
+
+upstream 브랜치 `LR2Beta3-v100201`(원본 디컴파일 소스, 절차는 [REA-RUNBOOK 단계 0](REA-RUNBOOK.md))과 현재 포크를 함수 단위로 비교할 수 있다.
+
+- `InitSkinData`·`ExpandSkinMax`는 원본 `LR2f.cpp:22603,22621`과 포크 `LR2/LR2_skinmanage.cpp:176,195`가 같은 구조다. 원본은 `realloc(..., (Max + 100) * 0xb14)`로 디컴파일 매직 넘버를 그대로 쓰고, 포크는 `sizeof(SkinHeader)`·`assert`·FIXME 주석만 더했다. 스킨 목록의 raw malloc/realloc 소유권은 원본 설계를 그대로 물려받은 것이다.
+- `ReleaseSound(AUDIO*, SOUNDDATA*)`도 원본 `LR2f.cpp:28483`과 포크 `LR2/En_audio.cpp:253`에 같은 시그니처로 있다. 조기 반환 조건 비교는 아직 하지 않았다.
+- 이 비교는 정적 소스 비교다. 원본 바이너리의 실제 누수량·동작은 측정하지 않았다.
+
+## Windows ARM64 정적 감사 (2026-10-27)
+
+결과는 [ARM64-AUDIT](ARM64-AUDIT.md)에 있다. 요약: DxLib에서 ARM64 컴파일을 막는 코드는 `Windows/DxWindow.cpp`의 `__cpuid`/`__rdtsc` 블록 하나(약 70줄)뿐이고, 나머지 x86 asm 119곳은 `DX_NON_INLINE_ASM`으로 이미 dead code다. 빌드 장애는 CMake의 포인터 크기 분기와 ARM64 FMOD 바이너리 부재다.
+
 ## 기존 재발 기록 반영
 
 Projects DevArchive의 vcpkg clean-machine 헤더 누락, FileTracker 접근 거부, BGA 첫 실행 초기화 실패, PHOENIXWAN 재열거 기록을 확인했다.

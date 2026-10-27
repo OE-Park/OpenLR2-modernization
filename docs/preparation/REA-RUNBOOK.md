@@ -30,6 +30,20 @@ export PATH="$(dirname "$NODE"):$PATH"
 이번 설치/빌드는 위 PATH와 `HUSKY=0`을 사용했고, 기존 npm 11.16.0의 CLI를 격리 Node로 실행했다.
 소스 CLI는 MCP 등록 없이 분석할 수 있다. 등록이 필요하면 REA dry-run을 검토한 뒤 별도 적용한다.
 
+## 단계 0: upstream 원본 소스 브랜치를 먼저 본다
+
+upstream `https://github.com/GOMazk/OpenLR2.git`의 브랜치 `LR2Beta3-v100201`(2026-10-27 기준 HEAD `583a38503555e59c4bafa49d60b9d0714c9007c2`, 2026-10-04 커밋)은 원본 LR2body.exe 100201의 디컴파일을 소스로 정리한 것이다.
+README가 "improvement is not allowed, this is a evidence that started from LR2"라고 밝힌다. 빌드 기준은 VS2008·DxLib 3.01a·FMODex 4.13.04다.
+
+- `LR2f.cpp` 32,930줄에 Ghidra식 변수명이 남아 있고 함수 423개 중 427개 주소 주석(`//4a7450` 형식)이 있다.
+- `LR2FunctionList.csv` 537행: 원본 주소·시그니처·함수명·태그. 태그 분포 converted 451, CONSTRUCTOR 30, DESTRUCTOR 27, AUTOCOPY 11, skipped 11, checked+converted 7.
+- CSV 주소 범위 `0x401000-0x4C2310`은 ZIP 원본 LR2body.exe의 `.text`(`0x401000` 시작, 크기 `0x3339E4`) 안에 있고 PE 타임스탬프는 2010-02-01이다. 같은 빌드로 쓸 정황 증거이며 바이트 동일성 증명은 아니다.
+- CSV 함수명 537개 중 365개가 현재 포크 `LR2/`에 같은 이름으로 남아 있다. 빠진 172개는 대부분 `CONS_/DEST_/COPY_` 보조 항목이다.
+
+원본 동작 질문은 이 순서로 푼다. (1) 이 브랜치의 함수와 CSV 주소 → (2) 포크 소스와 diff → (3) 그래도 빈 곳(`skipped` 11개, CSV에 없는 함수, 브랜치와 바이너리가 다르다고 의심될 때)만 단계 B의 Ghidra로 간다. 전체 디컴파일을 다시 하지 않는다.
+
+이 저장소에 upstream remote 추가는 auto 모드 권한 분류기가 거부했다. 세션 스크래치 디렉터리에 `git clone --depth 1 --branch LR2Beta3-v100201 --filter=blob:none`으로 받아 읽기만 했다. 프로젝트 저장소 설정은 바꾸지 않았다.
+
 ## 단계 A: 원본 정적 증거
 
 이번 실행에서 PE import뿐 아니라 GAR·ZIP에 `inspect-artifact --detail summary --evidence_output ... --json`을 실행해 archive Evidence를 보존했다.

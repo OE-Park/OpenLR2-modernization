@@ -30,6 +30,9 @@
 - 소스 근거, 플랫폼 제약, 메모리 우선 조사 대상: [현황 조사](docs/preparation/BASELINE.md).
 - [설계 초안](docs/superpowers/specs/2026-10-27-platform-modernization-design.md), [작업 순서](docs/preparation/ROADMAP.md), [실행 검증 기준](docs/preparation/ACCEPTANCE.md), [REA 절차](docs/preparation/REA-RUNBOOK.md).
 - 원본·분석 DB·개인 데이터가 올라가지 않도록 `/.local/` Git 제외.
+- (2026-10-27 추가) upstream 브랜치 `LR2Beta3-v100201`이 원본 디컴파일 소스+주소 CSV임을 확인하고 Ghidra 앞 단계로 편입: [REA 절차 단계 0](docs/preparation/REA-RUNBOOK.md). 스킨 목록 malloc/realloc 구조가 원본 그대로임을 소스 비교로 확인: [현황 조사](docs/preparation/BASELINE.md).
+- (2026-10-27 추가) Windows ARM64 정적 감사: [ARM64-AUDIT](docs/preparation/ARM64-AUDIT.md). DxLib 컴파일 장애는 `DxWindow.cpp` 한 블록, 빌드 장애는 CMake 포인터 분기와 ARM64 FMOD 부재.
+- (2026-10-27 추가) `LR2_100201.zip`의 MD5·SHA1·SHA-256·크기가 Mac 사본과 Windows 쪽 해시 출력에서 일치. Windows 11 x64 기준 빌드 머신은 별도 데스크톱(SSH 준비 중).
 
 ## 실제 검증과 남은 것
 
@@ -43,6 +46,8 @@
 | REA 런타임 | `.local/toolchain/`에 Node 24.22.1 격리 설치. 기존 기본 Node 24.18.1 변경 없음 |
 | REA 원본 PE 분석 | LR2body.exe: DLL 14개/일반 import 370개, LR2.exe: DLL 17개/일반 import 370개/지연 import 함수 2개. 두 결과 coverage complete |
 | REA doctor | exit 1: Codex 등록 config_drift, Ghidra 미설정. CLI PE 분석 성공과 구분 |
+| upstream 원본 소스 브랜치 ↔ ZIP 바이너리 | CSV 주소 범위가 `.text` 안, PE 타임스탬프 2010-02-01. 정황 일치, 바이트 동일성은 미검증 |
+| Windows ARM64 정적 감사 | DxLib·CMake·런타임 DLL 소스 조사 완료. 빌드·실행 미실행 |
 | Ghidra 복원·프로그램 digest 일치 | 미검증 |
 | Windows x64 빌드·원본 비교 | 미실행 |
 | Windows ARM64 네이티브 빌드·입력·오디오 | 미실행 |
