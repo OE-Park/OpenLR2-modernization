@@ -7,8 +7,8 @@
 |---|---|---|---|
 | P0 / ENV-01 | REA 호환 Node·의존성·런타임 빌드, CLI 확인 | 현재 runtime missing 해소 | 완료: Node 24.22.1, REA 6.8.0, build 3/3. doctor 등록/provider 문제는 분리 기록 |
 | P0 / RE-01 | ZIP 바이너리 PE imports 및 GAR 복원·digest 비교 | ENV-01, Ghidra | 대상별 Evidence ID·hash. 불일치는 명시적으로 분리 |
-| P0 / WIN-01 | clean Windows 11 x64에서 기존 preset 기준 빌드 | VS 2022·vcpkg, 소스 기준 고정 | configure/build 로그·exe/DLL machine 검사·기동 |
-| P0 / QA-01 | 합성 chart/skin·빈 DB로 원본/포크 기준 시나리오 확보 | WIN-01 | 판정·리플레이·DB·입력·오디오 baseline |
+| P0 / WIN-01 | clean Windows 11 x64에서 기존 preset 기준 빌드 | VS 2022·vcpkg, 소스 기준 고정 | configure/build 로그·exe/DLL machine 검사·기동. 실행 스크립트 [scripts/win01-baseline.ps1](scripts/README.md) 작성(2026-10-27, Windows 실행 전) |
+| P0 / QA-01 | 합성 chart/skin·빈 DB로 원본/포크 기준 시나리오 확보 | WIN-01 | 판정·리플레이·DB·입력·오디오 baseline. 생성기 [qa/](qa/README.md) 작성(2026-10-27, 엔진 로드 전) |
 | P1 / MEM-01 | 스킨 목록/CSTR 소유권 진단·최소 회귀 테스트 | QA-01 | allocation stack·같은 입력의 실패 재현 |
 | P1 / MEM-02 | 스킨 목록 소유권 수정 | MEM-01 | 이전 실패→수정 후 통과·같은 프로파일 반복 측정 |
 | P1 / MEM-03 | sound/graph/BGA 취소·재시작·종료 수명 감사 | QA-01 | 자원 카운터·누수 stack·해제 후 callback 검사 |

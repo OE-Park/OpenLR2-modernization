@@ -32,6 +32,7 @@
 - 원본·분석 DB·개인 데이터가 올라가지 않도록 `/.local/` Git 제외.
 - (2026-10-27 추가) upstream 브랜치 `LR2Beta3-v100201`이 원본 디컴파일 소스+주소 CSV임을 확인하고 Ghidra 앞 단계로 편입: [REA 절차 단계 0](docs/preparation/REA-RUNBOOK.md). 스킨 목록 malloc/realloc 구조가 원본 그대로임을 소스 비교로 확인: [현황 조사](docs/preparation/BASELINE.md).
 - (2026-10-27 추가) Windows ARM64 정적 감사: [ARM64-AUDIT](docs/preparation/ARM64-AUDIT.md). DxLib 컴파일 장애는 `DxWindow.cpp` 한 블록, 빌드 장애는 CMake 포인터 분기와 ARM64 FMOD 부재.
+- (2026-10-27 추가) WIN-01 실행 스크립트 [docs/preparation/scripts/](docs/preparation/scripts/README.md): macOS pwsh 구문 검사·dry-run만 통과, Windows 실행 전. QA-01 합성 자료 생성기 [docs/preparation/qa/](docs/preparation/qa/README.md): 127파일 결정성 검증, 어느 엔진에도 아직 로드 안 함.
 - (2026-10-27 추가) `LR2_100201.zip`의 MD5·SHA1·SHA-256·크기가 Mac 사본과 Windows 쪽 해시 출력에서 일치. Windows 11 x64 기준 빌드 머신은 별도 데스크톱(SSH 준비 중).
 
 ## 실제 검증과 남은 것
