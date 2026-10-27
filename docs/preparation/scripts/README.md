@@ -136,7 +136,11 @@ pwsh -ExecutionPolicy Bypass -File docs\preparation\scripts\win01-baseline.ps1 -
   - 런처는 닫히면서 원본 `LR2body.exe -s`도 띄운다. 같은 폴더의 DB를 동시에 쓰지 않도록 SSH에서 강제 종료했다. 같은 cwd라 `Log.txt` 귀속은 시작 시각·내용으로만 판단했다
 - SSH 재실행(DB 있음, 로그 `20261027-150121`): 오류창 없이 최상위 창 `OpenLR2 version 261001`(DxLib 메인 창)·`DIEmWin` 생성, launch Passed.
   단 DxLib이 디스플레이를 `WinDisc 0x0 0bit`로 인식한다. SSH 결과는 시작 검사 통과 근거일 뿐 렌더링 근거가 아니다
-- 관찰(미판정): 런처가 만든 새 DB에서 포크가 `ハッシュが不正です。プレイヤースコアデータを初期化しました。`를 남긴다(`LR2/LR2_statlong.cpp:129-151`). 원본 `LR2body.exe`도 같은지는 QA-01에서 비교한다
+- 원본 단독 기동(같은 날, 콘솔 세션, 사용자 육안): `LR2body.exe`가 `LR2 beta3 version 100201` / `PUSH ANY KEY` 타이틀을 띄우고 키 입력 후 게임 화면으로 넘어간다.
+  이 실행은 `Log.txt`를 쓰지 않았고 `Score\TEST.db`도 바꾸지 않았다(`config.xml`·`midi.xml`·`song.db`·`SkinCustomize\*.xml`만 갱신)
+- 런처가 만든 새 DB에서 포크가 `ハッシュが不正です。プレイヤースコアデータを初期化しました。`를 남기는 것(`LR2/LR2_statlong.cpp:129-151`)은 회귀가 아니다.
+  런처는 `player` 행을 `scorehash` NULL·통계 NULL로 만들고, `scorehash`는 플레이 후 `UpdatePlayerStat`만 쓴다. upstream 원본 디컴파일 소스(`LR2Beta3-v100201` `583a385`, `LR2f.cpp`)의
+  `MakePlayerStatHash`와 초기화 분기가 포크와 같다. 근거는 DB 행 조회와 소스 비교이며, 원본 실행 로그로는 확인하지 못했다
 - 미검증: 게임플레이·입력·오디오 출력(QA-01·ASIO-01 범위), 원본과의 동작 비교
 
 ## update-readme-status.py
