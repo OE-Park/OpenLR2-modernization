@@ -319,6 +319,7 @@ extern	long	Direct3D9_CheckDeviceMultiSampleType	( DWORD Adapter, D_D3DDEVTYPE D
 extern	long	Direct3D9_CheckDepthStencilMatch		( DWORD Adapter, D_D3DDEVTYPE DeviceType, D_D3DFORMAT AdapterFormat, D_D3DFORMAT RenderTargetFormat, D_D3DFORMAT DepthStencilFormat) ;
 extern	long	Direct3D9_GetDeviceCaps					( DWORD Adapter, D_D3DDEVTYPE DeviceType, D_D3DCAPS9* pCaps) ;
 extern	HANDLE	Direct3D9_GetAdapterMonitor				( DWORD Adapter ) ;
+extern	DWORD	Direct3D9_GetUseAdapterNumber			( void ) ;								// OpenLR2: adapter ordinal for GSYS.Screen.UseDisplayIndex (DxD3D9AdapterMap.h)
 extern	int		Direct3D9_CreateDevice					( void ) ;
 extern	int		Direct3D9_CheckMultiSampleParam			( D_D3DFORMAT Format, D_D3DMULTISAMPLE_TYPE *Samples, DWORD *Quality, int SamplesFailedBreak ) ;	// マルチサンプルレンダリングのサンプル数とクオリティをチェック
 extern	int		Direct3D9_IsValid						( void ) ;

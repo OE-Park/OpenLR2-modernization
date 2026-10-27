@@ -26,6 +26,7 @@
 #include "../DxBaseFunc.h"
 #include "../DxModel.h"
 #include "../DxMath.h"
+#include "../DxD3D9AdapterMap.h"
 
 #ifndef DX_NON_NAMESPACE
 
@@ -4259,6 +4260,40 @@ extern HANDLE Direct3D9_GetAdapterMonitor( DWORD Adapter )
 	return GAPIWin.Direct3D9Object->GetAdapterMonitor( Adapter ) ;
 }
 
+// OpenLR2: GSYS.Screen.UseDisplayIndex indexes DisplayInfo[] (EnumDisplayMonitors order), not Direct3D9 adapters.
+// Map it through the GDI device name; keep the old "index == ordinal" behaviour when no adapter matches.
+extern DWORD Direct3D9_GetUseAdapterNumber( void )
+{
+	const int Index = GSYS.Screen.UseDisplayIndex ;
+	wchar_t   AdapterNames[ 16 ][ D_CCHDEVICENAME ] ;
+	const wchar_t *AdapterNamePtrs[ 16 ] ;
+	UINT      AdapterNum ;
+	UINT      i ;
+	int       Adapter ;
+
+	if( GSYS.Screen.ValidUseDisplayIndex == FALSE ) return D_D3DADAPTER_DEFAULT ;
+	if( GAPIWin.Direct3D9Object == NULL || GSYS.Screen.DisplayInfo == NULL || Index < 0 || Index >= GSYS.Screen.DisplayNum ) return ( DWORD )Index ;
+
+	AdapterNum = Direct3D9_GetAdapterCount() ;
+	if( AdapterNum > 16 ) AdapterNum = 16 ;
+	for( i = 0 ; i < AdapterNum ; i ++ )
+	{
+		D_MONITORINFOEXW MonitorInfoEx ;
+
+		_MEMSET( &MonitorInfoEx, 0, sizeof( MonitorInfoEx ) ) ;
+		MonitorInfoEx.cbSize = sizeof( MonitorInfoEx ) ;
+		AdapterNames[ i ][ 0 ] = L'\0' ;
+		if( GetMonitorInfoWFunc( ( HMONITOR )Direct3D9_GetAdapterMonitor( i ), ( D_MONITORINFO * )&MonitorInfoEx ) )
+		{
+			_WCSCPY_S( AdapterNames[ i ], sizeof( AdapterNames[ i ] ), MonitorInfoEx.szDevice ) ;
+		}
+		AdapterNamePtrs[ i ] = AdapterNames[ i ] ;
+	}
+
+	Adapter = FindD3D9AdapterForDisplay( GSYS.Screen.DisplayInfo[ Index ].Name, AdapterNamePtrs, ( int )AdapterNum ) ;
+	return Adapter >= 0 ? ( DWORD )Adapter : ( DWORD )Index ;
+}
+
 extern int Direct3D9_CreateDevice( void )
 {
 	D_D3DCAPS9              DevCaps ;
@@ -4319,7 +4354,7 @@ extern int Direct3D9_CreateDevice( void )
 		switch( GSYS.Screen.FullScreenUseDispModeData.ColorBitDepth )
 		{
 		case 16 :
-			ModeCount = ( int )Direct3D9_GetAdapterModeCount( ( DWORD )( GSYS.Screen.ValidUseDisplayIndex ? GSYS.Screen.UseDisplayIndex : D_D3DADAPTER_DEFAULT ), D_D3DFMT_R5G6B5 ) ;
+			ModeCount = ( int )Direct3D9_GetAdapterModeCount( ( DWORD )Direct3D9_GetUseAdapterNumber(), D_D3DFMT_R5G6B5 ) ;
 			param.BackBufferFormat = ModeCount != 0 ? D_D3DFMT_R5G6B5 : D_D3DFMT_X1R5G5B5 ;
 			break ;
 
@@ -4405,7 +4440,7 @@ extern int Direct3D9_CreateDevice( void )
 
 	// シェーダーバージョン２．０を使用できない場合は
 	// 頂点処理はすべてソフトウエアで行う
-	Direct3D9_GetDeviceCaps( ( DWORD )( GSYS.Screen.ValidUseDisplayIndex ? GSYS.Screen.UseDisplayIndex : D_D3DADAPTER_DEFAULT ), D_D3DDEVTYPE_HAL, &DevCaps ) ;
+	Direct3D9_GetDeviceCaps( ( DWORD )Direct3D9_GetUseAdapterNumber(), D_D3DDEVTYPE_HAL, &DevCaps ) ;
 	if( ( DevCaps.VertexShaderVersion & 0xffff ) < 0x200 || 
 		( DevCaps.PixelShaderVersion  & 0xffff ) < 0x200 )
 	{
@@ -4421,7 +4456,7 @@ extern int Direct3D9_CreateDevice( void )
 		DXST_LOGFILE_ADDUTF16LE( "\x49\x00\x44\x00\x69\x00\x72\x00\x65\x00\x63\x00\x74\x00\x33\x00\x44\x00\x44\x00\x65\x00\x76\x00\x69\x00\x63\x00\x65\x00\x39\x00\x45\x00\x78\x00\x20\x00\xaa\x30\xd6\x30\xb8\x30\xa7\x30\xaf\x30\xc8\x30\x92\x30\xd6\x53\x97\x5f\x57\x30\x7e\x30\x59\x30\x2e\x00\x2e\x00\x2e\x00\x2e\x00\x20\x00\x00"/*@ L"IDirect3DDevice9Ex オブジェクトを取得します.... " @*/ ) ;
 
 		hr = GAPIWin.Direct3D9ExObject->CreateDeviceEx(
-			( DWORD )( GSYS.Screen.ValidUseDisplayIndex ? GSYS.Screen.UseDisplayIndex : D_D3DADAPTER_DEFAULT ),
+			( DWORD )Direct3D9_GetUseAdapterNumber(),
 			D_D3DDEVTYPE_HAL,
 			NS_GetMainWindowHandle(),
 //			D_D3DCREATE_MIXED_VERTEXPROCESSING
@@ -4440,7 +4475,7 @@ NOTUSEHARDWARE_VERTEXPROCESSINGEX:
 
 			// だめだった場合はソフトウエアプロセッシング
 			hr = GAPIWin.Direct3D9ExObject->CreateDeviceEx(
-				( UINT )( GSYS.Screen.ValidUseDisplayIndex ? GSYS.Screen.UseDisplayIndex : D_D3DADAPTER_DEFAULT ),
+				( UINT )Direct3D9_GetUseAdapterNumber(),
 				D_D3DDEVTYPE_HAL,
 				NS_GetMainWindowHandle(),
 				( DWORD )( 
@@ -4478,7 +4513,7 @@ NOTUSEHARDWARE_VERTEXPROCESSINGEX:
 		DXST_LOGFILE_ADDUTF16LE( "\x49\x00\x44\x00\x69\x00\x72\x00\x65\x00\x63\x00\x74\x00\x33\x00\x44\x00\x44\x00\x65\x00\x76\x00\x69\x00\x63\x00\x65\x00\x39\x00\x20\x00\xaa\x30\xd6\x30\xb8\x30\xa7\x30\xaf\x30\xc8\x30\x92\x30\xd6\x53\x97\x5f\x57\x30\x7e\x30\x59\x30\x2e\x00\x2e\x00\x2e\x00\x2e\x00\x20\x00\x00"/*@ L"IDirect3DDevice9 オブジェクトを取得します.... " @*/ ) ;
 
 		hr = GAPIWin.Direct3D9Object->CreateDevice(
-			( UINT )( GSYS.Screen.ValidUseDisplayIndex ? GSYS.Screen.UseDisplayIndex : D_D3DADAPTER_DEFAULT ),
+			( UINT )Direct3D9_GetUseAdapterNumber(),
 			D_D3DDEVTYPE_HAL,
 			NS_GetMainWindowHandle(),
 //			D_D3DCREATE_MIXED_VERTEXPROCESSING/*D_D3DCREATE_HARDWARE_VERTEXPROCESSING*/
@@ -4496,7 +4531,7 @@ NOTUSEHARDWARE_VERTEXPROCESSING:
 
 			// だめだった場合はソフトウエアプロセッシング
 			hr = GAPIWin.Direct3D9Object->CreateDevice(
-				( UINT )( GSYS.Screen.ValidUseDisplayIndex ? GSYS.Screen.UseDisplayIndex : D_D3DADAPTER_DEFAULT ),
+				( UINT )Direct3D9_GetUseAdapterNumber(),
 				D_D3DDEVTYPE_HAL,
 				NS_GetMainWindowHandle(),
 				( DWORD )(
@@ -4619,7 +4654,7 @@ extern int Direct3DDevice9_Reset(void)
 		switch (GSYS.Screen.FullScreenUseDispModeData.ColorBitDepth)
 		{
 		case 16:
-			ModeCount = (int)Direct3D9_GetAdapterModeCount((DWORD)(GSYS.Screen.ValidUseDisplayIndex ? GSYS.Screen.UseDisplayIndex : D_D3DADAPTER_DEFAULT), D_D3DFMT_R5G6B5);
+			ModeCount = (int)Direct3D9_GetAdapterModeCount(( DWORD )Direct3D9_GetUseAdapterNumber(), D_D3DFMT_R5G6B5);
 			param.BackBufferFormat = ModeCount != 0 ? D_D3DFMT_R5G6B5 : D_D3DFMT_X1R5G5B5;
 			break;
 
@@ -4705,7 +4740,7 @@ extern int Direct3DDevice9_Reset(void)
 
 	// シェーダーバージョン２．０を使用できない場合は
 	// 頂点処理はすべてソフトウエアで行う
-	Direct3D9_GetDeviceCaps((DWORD)(GSYS.Screen.ValidUseDisplayIndex ? GSYS.Screen.UseDisplayIndex : D_D3DADAPTER_DEFAULT), D_D3DDEVTYPE_HAL, &DevCaps);
+	Direct3D9_GetDeviceCaps(( DWORD )Direct3D9_GetUseAdapterNumber(), D_D3DDEVTYPE_HAL, &DevCaps);
 	if ((DevCaps.VertexShaderVersion & 0xffff) < 0x200 ||
 		(DevCaps.PixelShaderVersion & 0xffff) < 0x200)
 	{

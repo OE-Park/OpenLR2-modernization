@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <future>
@@ -19,6 +20,9 @@
 #include <utility>
 
 #include <DxLib.h>
+#ifdef _WIN32
+#include <DxD3D9AdapterMap.h>
+#endif
 extern "C" {
 #include <sqlite3.h>
 }
@@ -127,6 +131,26 @@ static bool run_tests() {
 		ErrorLogAdd("6\n");
 		return false;
 	}
+#ifdef _WIN32
+	{
+		// Orders seen on a 3-monitor machine (#4): EnumDisplayMonitors listed DISPLAY3 before DISPLAY1,
+		// while Direct3D9 enumerated the adapters as DISPLAY2, DISPLAY1, DISPLAY3.
+		const wchar_t* monitors[] = {L"\\\\.\\DISPLAY2", L"\\\\.\\DISPLAY3", L"\\\\.\\DISPLAY1"};
+		const wchar_t* adapters[] = {L"\\\\.\\DISPLAY2", L"\\\\.\\DISPLAY1", L"\\\\.\\DISPLAY3"};
+		const int expected[] = {0, 2, 1};
+		for (int i = 0; i < 3; i++) {
+			if (const int got = DxLib::FindD3D9AdapterForDisplay(monitors[i], adapters, 3); got != expected[i]) {
+				ErrorLogFmtAdd("7: monitor %d -> adapter %d, expected %d\n", i, got, expected[i]);
+				return false;
+			}
+		}
+		if (DxLib::FindD3D9AdapterForDisplay(L"\\\\.\\DISPLAY9", adapters, 3) != -1 ||
+			DxLib::FindD3D9AdapterForDisplay(L"", adapters, 3) != -1) {
+			ErrorLogAdd("8\n");
+			return false;
+		}
+	}
+#endif
 	return true;
 }
 
@@ -151,26 +175,6 @@ static int FindMonitorThatContainsWindowCenter() {
 	return -1;
 }
 
-static int GetUseDisplayIndex(int displayInfoIndex) {
-	if (displayInfoIndex < 0) return -1;
-
-	int targetPrimary = 0;
-	if (GetDisplayInfo(displayInfoIndex, nullptr, nullptr, nullptr, nullptr, &targetPrimary) != 0) return -1;
-	if (targetPrimary) return 0;
-
-	int useDisplayIndex = 1;
-	const int displayCount = GetDisplayNum();
-	for (int i = 0; i < displayCount; i++) {
-		if (i == displayInfoIndex) return useDisplayIndex;
-
-		int primary = 0;
-		if (GetDisplayInfo(i, nullptr, nullptr, nullptr, nullptr, &primary) != 0) continue;
-		if (!primary) useDisplayIndex++;
-	}
-
-	return -1;
-}
-
 // After Windows changes the primary monitor at runtime, DxLib can restore the
 // windowed mode on the wrong display when leaving exclusive fullscreen. Move it
 // back to the target display while keeping the same relative offset.
@@ -187,19 +191,36 @@ static void MoveWindowToDisplay(int targetDisplayIndex, int sourceDisplayIndex) 
 	SetWindowPosition(targetX + wx - sourceX, targetY + wy - sourceY);
 }
 
+// Exclusive fullscreen could not be entered (#4). When every DxLib retry fails, ChangeWindowMode returns
+// DX_CHANGESCREEN_RETURN with the graphics system left uninitialised, and the next draw crashes in
+// DxLib::DrawMemImg. Something has to bring a working screen back before the caller continues.
+static void HandleExclusiveFullscreenFailure(int changeScreenResult, int displayInfoIndex) {
+	ErrorLogFmtAdd("Exclusive fullscreen failed on display %d (ChangeWindowMode=%d), switching to windowed mode\n",
+		displayInfoIndex, changeScreenResult);
+	g_exclusiveDisplayIndex = -1;
+	if (const int result = ChangeWindowMode(1); result == DX_CHANGESCREEN_OK || result == DX_CHANGESCREEN_REFRESHNORMAL) return;
+
+	// Continuing without a screen would crash on the next draw, so stop the same way as other startup failures.
+	DxLib_End();
+	MessageBoxA(NULL, "Could not switch the screen to fullscreen or windowed mode.", "エラー", 0);
+	std::exit(-1);
+}
+
 static void ApplyScreenMode(int screenmode) {
 	// DxLib picks exclusive vs borderless through SetFullScreenResolutionMode;
 	// ChangeWindowMode only toggles windowed(1)/fullscreen(0).
 	switch (screenmode) {
 		case 0: {
+			// SetUseDisplayIndex takes the GetDisplayInfo index; DxLib maps it to the Direct3D9 adapter (#4).
 			const int displayInfoIndex = FindMonitorThatContainsWindowCenter();
-			const int useDisplayIndex = GetUseDisplayIndex(displayInfoIndex);
-			if (useDisplayIndex >= 0) {
-				SetUseDisplayIndex(useDisplayIndex);
+			if (displayInfoIndex >= 0) {
+				SetUseDisplayIndex(displayInfoIndex);
 				g_exclusiveDisplayIndex = displayInfoIndex;
 			}
 			SetFullScreenResolutionMode(DX_FSRESOLUTIONMODE_DESKTOP);
-			ChangeWindowMode(0);
+			if (const int result = ChangeWindowMode(0); result != DX_CHANGESCREEN_OK && result != DX_CHANGESCREEN_REFRESHNORMAL) {
+				HandleExclusiveFullscreenFailure(result, displayInfoIndex);
+			}
 			break;
 		}
 		case 1:
