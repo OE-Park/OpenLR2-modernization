@@ -17,7 +17,8 @@ ROADMAP의 WIN-01 행이 요구하는 완료 근거는 **configure/build 로그 
 
 - Windows 11 x64 (ARM64 호스트는 경고만 내고 진행한다. 그 결과는 ACCEPTANCE.md 기준으로 에뮬레이션 결과이며 네이티브 완료로 세지 않는다)
 - Visual Studio 2026 Community + "C++를 사용한 데스크톱 개발" 워크로드 (`Microsoft.VisualStudio.Component.VC.Tools.x86.x64`, v145 / MSVC 14.5x)
-- `Visual Studio 18 2026` 생성기를 제공하는 CMake(upstream 4.2 이상), git, PowerShell 7 (`pwsh`). VS 2026에 포함된 CMake(18.0 기준 4.1.1)는 PATH에 자동으로 오르지 않고 생성기 제공 여부도 확인하지 않았다. environment 단계가 생성기 없음으로 실패하면 cmake.org 4.2+ 배포본을 PATH 앞에 둔다
+- `Visual Studio 18 2026` 생성기를 제공하는 CMake(upstream 4.2 이상), git, PowerShell 7 (`pwsh`). VS 2026에 포함된 CMake는 PATH에 자동으로 오르지 않는다.
+  VS 18.11 내장본(`<VS>\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin`, 4.3.1-msvc1)은 `Visual Studio 18 2026` 생성기를 제공하고 WIN-01 configure/build를 통과했다(2026-10-27). 이 경로를 PATH 앞에 두면 별도 설치가 필요 없다
 
 #### VS 2026 preset
 
@@ -79,9 +80,15 @@ pwsh -ExecutionPolicy Bypass -File docs\preparation\scripts\win01-baseline.ps1 -
 - zip에는 `config.xml`이 없다. OpenLR2는 `config.xml`에 jukebox 경로가 하나도 없으면 모달 오류("JUKEBOX1 …")를 띄우고 -1로 끝난다
   (`LR2/Main.cpp` 시작부). 원본 `LR2.exe` 런처로 한 번 설정하거나 `-SeedConfig`로 `LR2files/Config/` 하나를 등록한 최소 `config.xml`을 만든다.
   `-SeedConfig`는 기존 `config.xml`을 덮어쓰지 않는다.
-- SSH·서비스 세션에서 띄운 GUI는 콘솔 데스크톱에 보이지 않는다. 생존 여부·창 제목·생성 파일만 근거다.
-  살아 있어도 창 제목이 `エラー`(`Main.cpp` 시작 오류 MessageBox)면 launch를 Failed로 기록한다(`launch.json`의 `blockedByErrorDialog`).
-  창 제목을 읽지 못하면(비대화형 세션) 경고만 남기고 Passed로 둔다. 이때는 오류 창 가능성을 배제하지 못한다.
+- `config.xml`만으로는 부족하다. `LR2/Main.cpp`는 `LR2files/Database/Score/<player id>.db`가 없으면
+  `スコアデータベースが見つかりません。config.exeで作成して下さい。` 창을 띄우고 멈춘다. 이 DB와 `player` 행은 원본 `LR2.exe` 런처가 플레이어 등록 때 만든다.
+  `-SeedConfig`는 DB를 만들지 않는다. 대화형 세션에서 `LR2.exe`로 플레이어를 한 번 등록한 뒤 `-SkipBuild -SkipExtract -Launch`로 다시 돌린다.
+- SSH·서비스 세션에서 띄운 GUI는 콘솔 데스크톱에 보이지 않고 `Process.MainWindowTitle`도 비어 있다(숨김 창은 대상이 아니다).
+  그래서 `EnumWindows`로 PID의 최상위 창을 숨김 포함 열거해 `launch.json`의 `windows`에 클래스·제목·Static 본문을 남긴다.
+  살아 있는 프로세스에 `#32770`(MessageBoxA) 창이 있으면 `blockedByErrorDialog`·`errorDialogText`를 채우고 launch를 Failed로 기록한다.
+  초판은 `MainWindowTitle`만 봐서 위 스코어 DB 오류창을 놓치고 Passed로 기록했다(2026-10-27 수정).
+- 오류창이 없고 살아 있다는 것은 시작 검사를 통과했다는 뜻일 뿐이다. SSH 비대화형 세션에서 D3D 장치·창이 실제로 만들어지는지는
+  이 스크립트로 확인하지 않았다. 타이틀 화면 도달은 콘솔(또는 RDP·Moonlight) 세션에서 눈으로 확인한다.
 - `openlr2-config.xml`은 정상 종료 시점에 쓰인다. 살아 있는 채로 끝내면 없을 수 있다.
 
 ### 검증하지 않는 것
@@ -117,7 +124,20 @@ pwsh -ExecutionPolicy Bypass -File docs\preparation\scripts\win01-baseline.ps1 -
 - PE 헤더 읽기는 `dep/FMOD/bin64/fmod.dll`(0x8664)·`bin86/fmod.dll`(0x14c)로 확인, 해시가 `input-inventory.json`과 일치
 - CP932 zip 항목 이름 디코드는 합성 zip으로 확인
 - (VS 2026 전환) `CMakePresets.json` JSON·`cmake --list-presets` 파싱 통과, `Get-PresetGenerator`가 `windows-vs2026-x64`·`-asan`·`-x86`→`Visual Studio 18 2026`/`[18.0,19.0)`, `windows-vs-x64`→`[17.0,18.0)`, 없는 이름→예외로 동작하는 것을 macOS pwsh에서 확인. `cmake -E capabilities`의 VS 생성기 목록과 VS 2026 vswhere 조회는 Windows에서만 확인 가능
-- Windows 실기기 실행은 아직 하지 않았다. vswhere·cl.exe·bootstrap·Start-Process 기동 경로는 실행 후 이 절을 갱신한다
+- Windows 실기기 1차 실행(2026-10-27, WIN-DESKTOP: Windows 11 build 26300 x64, pwsh 7.6.6, VS Community 2026 18.11.12324.101, cl 19.51.36260, VS 내장 CMake 4.3.1, 커밋 `29044f2`, SSH High integrity 세션)
+  - environment·vcpkg(clone 24s, checkout `cd61e1e2…`, bootstrap)·configure(207s)·build(129s)·artifacts·extract·stage Passed
+  - `OpenLR2_x64.exe` Machine 0x8664, SHA-256 `85f168b2…2087` / `fmod.dll` 0x8664, `5767ca88…d483` (`input-inventory.json`과 일치)
+  - zip·`LR2body.exe`·`LR2.exe`·`fmodex.dll` 해시가 inventory와 일치, CP932 이름 추출 정상
+  - build 로그의 MSVC 경고 상위: C4100 54, C4244 42, C4505 26, C4456 20 (실패 없음)
+  - launch: 초판은 Passed로 기록했지만 거짓 양성이었다. 숨김 창 열거로 스코어 DB 오류창을 확인했고, 수정본은 같은 상태를 Failed로 기록한다
+- 대화형 기동(같은 날, 콘솔 세션). 바탕화면 cmd로 `LR2.exe` 런처에서 플레이어 `TEST` 등록 → `OpenLR2_x64.exe -ns`
+  - 사용자가 타이틀 화면을 눈으로 확인, Esc 정상 종료 exit 0, 종료 시 `openlr2-config.xml` 생성
+  - 실행 중 `d3d9.dll`·`d3dx9_43.dll`·`dxgi.dll`·NVIDIA UMD·`fmod.dll`·`dinput8.dll` 로드, 모니터 3대(4K, 144dpi) 인식
+  - 런처는 닫히면서 원본 `LR2body.exe -s`도 띄운다. 같은 폴더의 DB를 동시에 쓰지 않도록 SSH에서 강제 종료했다. 같은 cwd라 `Log.txt` 귀속은 시작 시각·내용으로만 판단했다
+- SSH 재실행(DB 있음, 로그 `20261027-150121`): 오류창 없이 최상위 창 `OpenLR2 version 261001`(DxLib 메인 창)·`DIEmWin` 생성, launch Passed.
+  단 DxLib이 디스플레이를 `WinDisc 0x0 0bit`로 인식한다. SSH 결과는 시작 검사 통과 근거일 뿐 렌더링 근거가 아니다
+- 관찰(미판정): 런처가 만든 새 DB에서 포크가 `ハッシュが不正です。プレイヤースコアデータを初期化しました。`를 남긴다(`LR2/LR2_statlong.cpp:129-151`). 원본 `LR2body.exe`도 같은지는 QA-01에서 비교한다
+- 미검증: 게임플레이·입력·오디오 출력(QA-01·ASIO-01 범위), 원본과의 동작 비교
 
 ## update-readme-status.py
 

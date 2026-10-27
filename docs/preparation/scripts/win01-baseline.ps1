@@ -484,6 +484,42 @@ function Step-Stage {
     return @{ status = 'Passed'; outputs = @{ lr2Root = $script:Lr2Root; originalLR2bodyKept = $originalKept } }
 }
 
+# Process.MainWindowTitle only sees visible windows, and from an SSH session every window is invisible.
+# EnumWindows sees hidden ones too, so a MessageBoxA (class #32770) blocking startup is still detected.
+function Get-ProcessWindows {
+    param([int]$ProcessId)
+    if (-not ('Win01.WindowProbe' -as [type])) {
+        Add-Type -Namespace Win01 -Name WindowProbe -UsingNamespace System.Text, System.Collections.Generic -MemberDefinition @'
+public delegate bool EnumProc(IntPtr h, IntPtr l);
+[DllImport("user32.dll")] static extern bool EnumWindows(EnumProc f, IntPtr l);
+[DllImport("user32.dll")] static extern bool EnumChildWindows(IntPtr p, EnumProc f, IntPtr l);
+[DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
+[DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetClassName(IntPtr h, StringBuilder s, int n);
+[DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetWindowText(IntPtr h, StringBuilder s, int n);
+[DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr h);
+static string Cls(IntPtr h) { var s = new StringBuilder(256); GetClassName(h, s, s.Capacity); return s.ToString(); }
+static string Txt(IntPtr h) { var s = new StringBuilder(1024); GetWindowText(h, s, s.Capacity); return s.ToString(); }
+// One row per top-level window: class \t title \t visible \t static-child texts joined by " | ".
+public static List<string> For(uint target) {
+    var rows = new List<string>();
+    EnumWindows((h, l) => {
+        uint p; GetWindowThreadProcessId(h, out p);
+        if (p != target) return true;
+        var statics = new List<string>();
+        EnumChildWindows(h, (c, l2) => { if (Cls(c) == "Static" && Txt(c).Length > 0) statics.Add(Txt(c)); return true; }, IntPtr.Zero);
+        rows.Add(Cls(h) + "\t" + Txt(h) + "\t" + IsWindowVisible(h) + "\t" + string.Join(" | ", statics));
+        return true;
+    }, IntPtr.Zero);
+    return rows;
+}
+'@
+    }
+    foreach ($row in [Win01.WindowProbe]::For([uint32]$ProcessId)) {
+        $c = $row -split "`t", 4
+        [ordered]@{ class = $c[0]; title = $c[1]; visible = [bool]::Parse($c[2]); text = $c[3] }
+    }
+}
+
 function Step-Launch {
     if (-not $Launch) { return @{ status = 'Skipped'; outputs = @{ reason = 'pass -Launch to start the game' } } }
     $exe = Join-Path $script:Lr2Root $ExeName
@@ -497,11 +533,13 @@ function Step-Launch {
             else { Start-Process -FilePath $exe -WorkingDirectory $script:Lr2Root -PassThru }
     Write-Info ("pid {0}: {1} {2}" -f $proc.Id, $exe, $LaunchArgs)
     $exited = $proc.WaitForExit($LaunchWaitSeconds * 1000)
-    $out = [ordered]@{ pid = $proc.Id; args = $LaunchArgs; waitSeconds = $LaunchWaitSeconds; exitedWithinWait = $exited; exitCode = $null; aliveAfterWait = (-not $exited); mainWindowTitle = $null; stopped = $false; collected = @() }
+    $out = [ordered]@{ pid = $proc.Id; args = $LaunchArgs; waitSeconds = $LaunchWaitSeconds; exitedWithinWait = $exited; exitCode = $null; aliveAfterWait = (-not $exited); mainWindowTitle = $null; windows = @(); stopped = $false; collected = @() }
     if ($exited) { $proc.WaitForExit(); $out.exitCode = $proc.ExitCode; Write-Info ("exited with {0}" -f $out.exitCode) }
     else {
         try { $proc.Refresh(); $out.mainWindowTitle = $proc.MainWindowTitle } catch { $out.mainWindowTitle = $null }
-        Write-Info ("still alive after {0}s (window: '{1}')" -f $LaunchWaitSeconds, $out.mainWindowTitle)
+        try { $out.windows = @(Get-ProcessWindows -ProcessId $proc.Id) } catch { Write-Warn "window enumeration failed: $_" }
+        Write-Info ("still alive after {0}s (main window: '{1}', {2} top-level window(s))" -f $LaunchWaitSeconds, $out.mainWindowTitle, $out.windows.Count)
+        foreach ($w in $out.windows) { Write-Info ("  window class='{0}' title='{1}' visible={2} text='{3}'" -f $w.class, $w.title, $w.visible, $w.text) }
         if ($StopAfterWait) { Stop-Process -Id $proc.Id -Force; $out.stopped = $true; Write-Info 'stopped (-StopAfterWait)' }
     }
     # Collect config/log evidence produced by the run (openlr2-config.xml is written on normal shutdown, so it may be absent while alive).
@@ -512,14 +550,13 @@ function Step-Launch {
     foreach ($f in $candidates) { Copy-Item -LiteralPath $f.FullName -Destination (Join-Path $dest $f.Name) -Force; $out.collected += $f.FullName }
     $out.filesWrittenAfterStart = @(Get-ChildItem -LiteralPath $script:Lr2Root -Recurse -File -ErrorAction SilentlyContinue | Where-Object { $_.LastWriteTime -ge $startedAt } | Select-Object -ExpandProperty FullName)
     # Main.cpp startup failures block in MessageBoxA(..., "エラー") before game init; a live process showing it is not a pass.
-    $out.blockedByErrorDialog = ($out.aliveAfterWait -and $out.mainWindowTitle -eq 'エラー')
-    if ($out.blockedByErrorDialog) { Write-Warn 'process is alive but showing the startup error dialog (エラー)' }
-    if ($out.aliveAfterWait -and [string]::IsNullOrEmpty($out.mainWindowTitle)) {
-        Write-Warn 'no window title visible (non-interactive session?); an error dialog cannot be ruled out'
-    }
+    $dialog = @($out.windows | Where-Object { $_.class -eq '#32770' }) | Select-Object -First 1
+    $out.blockedByErrorDialog = ($out.aliveAfterWait -and ($null -ne $dialog -or $out.mainWindowTitle -eq 'エラー'))
+    $out.errorDialogText = if ($dialog) { $dialog.text } else { $null }
+    if ($out.blockedByErrorDialog) { Write-Warn ("process is alive but blocked in a dialog '{0}': {1}" -f $dialog.title, $dialog.text) }
     Save-Json 'launch.json' $out
     $status = if ($out.blockedByErrorDialog) { 'Failed' } elseif ($out.aliveAfterWait -or $out.exitCode -eq 0) { 'Passed' } else { 'Failed' }
-    return @{ status = $status; exitCode = $out.exitCode; outputs = @{ pid = $out.pid; aliveAfterWait = $out.aliveAfterWait; exitCode = $out.exitCode; window = $out.mainWindowTitle; blockedByErrorDialog = $out.blockedByErrorDialog } }
+    return @{ status = $status; exitCode = $out.exitCode; outputs = @{ pid = $out.pid; aliveAfterWait = $out.aliveAfterWait; exitCode = $out.exitCode; window = $out.mainWindowTitle; windowCount = $out.windows.Count; blockedByErrorDialog = $out.blockedByErrorDialog; errorDialogText = $out.errorDialogText } }
 }
 
 # ---------------------------------------------------------------- main

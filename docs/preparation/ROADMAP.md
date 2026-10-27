@@ -8,7 +8,7 @@
 |---|---|---|---|
 | P0 / ENV-01 | REA 호환 Node·의존성·런타임 빌드, CLI 확인 | 현재 runtime missing 해소 | 완료: Node 24.22.1, REA 6.8.0, build 3/3. doctor 등록/provider 문제는 분리 기록 |
 | P0 / RE-01 | ZIP 바이너리 PE imports 및 GAR 복원·digest 비교 | ENV-01, Ghidra | 대상별 Evidence ID·hash. 불일치는 명시적으로 분리 |
-| P0 / WIN-01 | clean Windows 11 x64에서 `windows-vs2026-x64` preset 기준 빌드 | VS 2026 Community·CMake 4.2+·vcpkg, 소스 기준 고정 | configure/build 로그·exe/DLL machine 검사·기동. 실행 스크립트 [scripts/win01-baseline.ps1](scripts/README.md) 작성(2026-10-27, Windows 실행 전) |
+| P0 / WIN-01 | clean Windows 11 x64에서 `windows-vs2026-x64` preset 기준 빌드 | VS 2026 Community·CMake 4.2+·vcpkg, 소스 기준 고정 | configure/build 로그·exe/DLL machine 검사·기동. 실행 스크립트 [scripts/win01-baseline.ps1](scripts/README.md). 2026-10-27 WIN-DESKTOP에서 configure/build·PE(x64) 검사·추출·스테이징 통과. 런처로 플레이어 등록 후 콘솔 세션에서 타이틀 화면 도달·Esc 정상 종료(exit 0) 확인 |
 | P0 / QA-01 | 합성 chart/skin·빈 DB로 원본/포크 기준 시나리오 확보 | WIN-01 | 판정·리플레이·DB·입력·오디오 baseline. 생성기 [qa/](qa/README.md) 작성(2026-10-27, 엔진 로드 전) |
 | P1 / MEM-01 | 스킨 목록/CSTR 소유권 진단·최소 회귀 테스트 | QA-01 | allocation stack·같은 입력의 실패 재현 |
 | P1 / MEM-02 | 스킨 목록 소유권 수정 | MEM-01 | 이전 실패→수정 후 통과·같은 프로파일 반복 측정 |
