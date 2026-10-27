@@ -58,6 +58,7 @@ $PSNativeCommandUseErrorActionPreference = $false
 $RepoRoot = (Resolve-Path $RepoRoot).Path
 if (-not $WorkRoot) { $WorkRoot = Join-Path $RepoRoot '.local\win01' }
 if (-not $VcpkgRoot) { $VcpkgRoot = Join-Path $WorkRoot 'vcpkg' }
+$script:FmodRelPathExplicit = $PSBoundParameters.ContainsKey('FmodRelPath')
 $script:InventoryPath = Join-Path $RepoRoot 'docs\preparation\evidence\input-inventory.json'
 $script:ZipName = 'LR2_100201.zip'
 $script:ZipTop = 'LR2beta3'
@@ -389,7 +390,10 @@ function Get-BuildConfiguration {
 function Step-Artifacts {
     $config = Get-BuildConfiguration
     $exe = Join-Path $RepoRoot ('out\{0}\{1}\{2}' -f $Preset, $config, $ExeName)
-    $dll = Join-Path $RepoRoot $FmodRelPath
+    # Debug links fmodL.dll (CMakeLists.txt FMOD IMPORTED_LOCATION_DEBUG); an explicit -FmodRelPath is kept as given.
+    $fmodRel = $FmodRelPath
+    if ($config -eq 'Debug' -and -not $script:FmodRelPathExplicit) { $fmodRel = $fmodRel -replace 'fmod\.dll$', 'fmodL.dll' }
+    $dll = Join-Path $RepoRoot $fmodRel
     $missing = @($exe, $dll | Where-Object { -not (Test-Path $_) })
     if ($missing.Count -gt 0) { return @{ status = 'Failed'; outputs = @{ missing = $missing } } }
     $info = [ordered]@{ exe = (Get-PeHeaderInfo $exe); fmod = (Get-PeHeaderInfo $dll) }
@@ -507,9 +511,15 @@ function Step-Launch {
     $candidates += @(Get-ChildItem -LiteralPath $script:Lr2Root -File -ErrorAction SilentlyContinue | Where-Object { $_.Extension -eq '.log' -or $_.Name -eq 'Log.txt' })
     foreach ($f in $candidates) { Copy-Item -LiteralPath $f.FullName -Destination (Join-Path $dest $f.Name) -Force; $out.collected += $f.FullName }
     $out.filesWrittenAfterStart = @(Get-ChildItem -LiteralPath $script:Lr2Root -Recurse -File -ErrorAction SilentlyContinue | Where-Object { $_.LastWriteTime -ge $startedAt } | Select-Object -ExpandProperty FullName)
+    # Main.cpp startup failures block in MessageBoxA(..., "エラー") before game init; a live process showing it is not a pass.
+    $out.blockedByErrorDialog = ($out.aliveAfterWait -and $out.mainWindowTitle -eq 'エラー')
+    if ($out.blockedByErrorDialog) { Write-Warn 'process is alive but showing the startup error dialog (エラー)' }
+    if ($out.aliveAfterWait -and [string]::IsNullOrEmpty($out.mainWindowTitle)) {
+        Write-Warn 'no window title visible (non-interactive session?); an error dialog cannot be ruled out'
+    }
     Save-Json 'launch.json' $out
-    $status = if ($out.aliveAfterWait -or $out.exitCode -eq 0) { 'Passed' } else { 'Failed' }
-    return @{ status = $status; exitCode = $out.exitCode; outputs = @{ pid = $out.pid; aliveAfterWait = $out.aliveAfterWait; exitCode = $out.exitCode; window = $out.mainWindowTitle } }
+    $status = if ($out.blockedByErrorDialog) { 'Failed' } elseif ($out.aliveAfterWait -or $out.exitCode -eq 0) { 'Passed' } else { 'Failed' }
+    return @{ status = $status; exitCode = $out.exitCode; outputs = @{ pid = $out.pid; aliveAfterWait = $out.aliveAfterWait; exitCode = $out.exitCode; window = $out.mainWindowTitle; blockedByErrorDialog = $out.blockedByErrorDialog } }
 }
 
 # ---------------------------------------------------------------- main

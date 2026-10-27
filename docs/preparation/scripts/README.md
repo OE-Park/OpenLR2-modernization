@@ -52,6 +52,7 @@ pwsh -ExecutionPolicy Bypass -File docs\preparation\scripts\win01-baseline.ps1 -
 | `-ZipPath` | (없음) | `LR2_100201.zip` 경로. `-SkipExtract`가 아니면 필수 |
 | `-WorkRoot` | `<repo>\.local\win01` | 로그·추출본·vcpkg가 모두 이 아래에 생긴다 |
 | `-VcpkgRoot` | `<WorkRoot>\vcpkg` | 고정 커밋 `cd61e1e2…78e3`으로 checkout |
+| `-FmodRelPath` | `dep\FMOD\bin64\fmod.dll` | 검사·스테이징할 FMOD DLL. 지정하지 않고 build preset이 Debug면 `fmodL.dll`로 바꾼다(`CMakeLists.txt` Debug 링크) |
 | `-Preset` / `-BuildPreset` | `windows-vs2026-x64` / `windows-vs2026-x64-relwithdebinfo` | CMakePresets.json의 이름. VS 2022 기기면 `windows-vs-x64` / `windows-vs-x64-relwithdebinfo` |
 | `-SkipBuild` / `-SkipExtract` / `-Force` | off | 단계 생략·덮어쓰기 |
 | `-Launch` | off | 게임 프로세스를 실제로 띄운다 |
@@ -78,8 +79,9 @@ pwsh -ExecutionPolicy Bypass -File docs\preparation\scripts\win01-baseline.ps1 -
 - zip에는 `config.xml`이 없다. OpenLR2는 `config.xml`에 jukebox 경로가 하나도 없으면 모달 오류("JUKEBOX1 …")를 띄우고 -1로 끝난다
   (`LR2/Main.cpp` 시작부). 원본 `LR2.exe` 런처로 한 번 설정하거나 `-SeedConfig`로 `LR2files/Config/` 하나를 등록한 최소 `config.xml`을 만든다.
   `-SeedConfig`는 기존 `config.xml`을 덮어쓰지 않는다.
-- SSH·서비스 세션에서 띄운 GUI는 콘솔 데스크톱에 보이지 않는다. 생존 여부·창 제목·생성 파일만 근거다. 모달 오류 창도 "살아 있음"으로 잡히므로
-  `launch.json`의 `mainWindowTitle`(오류 창은 `エラー`)과 `exitCode`를 같이 본다.
+- SSH·서비스 세션에서 띄운 GUI는 콘솔 데스크톱에 보이지 않는다. 생존 여부·창 제목·생성 파일만 근거다.
+  살아 있어도 창 제목이 `エラー`(`Main.cpp` 시작 오류 MessageBox)면 launch를 Failed로 기록한다(`launch.json`의 `blockedByErrorDialog`).
+  창 제목을 읽지 못하면(비대화형 세션) 경고만 남기고 Passed로 둔다. 이때는 오류 창 가능성을 배제하지 못한다.
 - `openlr2-config.xml`은 정상 종료 시점에 쓰인다. 살아 있는 채로 끝내면 없을 수 있다.
 
 ### 검증하지 않는 것

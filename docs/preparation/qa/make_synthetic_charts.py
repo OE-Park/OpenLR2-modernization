@@ -31,7 +31,7 @@ import sys
 import wave
 from pathlib import Path
 
-GENERATOR_VERSION = "1.0.0"
+GENERATOR_VERSION = "1.1.0"
 DEFAULT_SEED = 1
 
 # Base-62 digit order used by Base62ToInt() in LR2/En_fileutil.cpp:537-549:
@@ -166,17 +166,54 @@ class Chart:
             lines += extra_tail
         return CRLF.join(lines) + CRLF
 
-    def expected_notes(self) -> float:
-        """Note count the way LR2_songmanage.cpp ParseBMSMETA counts (3060-3081):
-        one per visible object on raw channels 11-29, 0.5 per object on 51-69."""
-        n = 0.0
-        for (_, ch), arr in self.notes.items():
-            cnt = sum(1 for o in arr if o != "00")
-            if 11 <= ch <= 29:
-                n += cnt
-            elif 51 <= ch <= 69:
-                n += 0.5 * cnt
-        return n
+
+def base36_to_int(ch1: str, ch2: str) -> int:
+    """En_fileutil.cpp Base36ToInt: 'a'-'z' and 'A'-'Z' are 10-35, '1'-'9' are 1-9, anything else 0."""
+    def digit(c: str) -> int:
+        if "a" <= c <= "z":
+            return ord(c) - ord("a") + 10
+        if "1" <= c <= "9":
+            return ord(c) - ord("0")
+        if "A" <= c <= "Z":
+            return ord(c) - ord("A") + 10
+        return 0
+    return digit(ch1) * 36 + digit(ch2)
+
+
+def songmanage_notes(text: str) -> float:
+    """Port of the note count in LR2_songmanage.cpp ParseBMSMETA (2991-3082), run on the chart text.
+
+    - lines inside any #IF other than "#IF 1" are skipped until #ENDIF (2991-2996)
+    - #LNOBJ objects are not counted (3018-3022, 3070)
+    - raw channels 51-69 are shifted by -40 and 31-49 by -20 before the check (3037-3043),
+      so LN endpoints and hidden notes each count as 1 on 11-29 (the 0.5 branch is unreachable)
+    """
+    notes = 0.0
+    flag_if = False
+    lnobj = -12345
+    for line in text.splitlines():
+        if line.startswith("#IF") and not line.startswith("#IF 1"):
+            flag_if = True
+        elif line.startswith("#ENDIF"):
+            flag_if = False
+        elif not line.startswith("#") or flag_if:
+            pass
+        elif line.startswith("#LNOBJ"):
+            lnobj = base36_to_int(line[7:8], line[8:9])
+        elif len(line) > 5 and all(c in "0123456789" for c in line[1:6]):
+            data = int(line[4]) * 10 + int(line[5])
+            if 51 <= data <= 69:
+                data -= 40
+            if 31 <= data <= 49:
+                data -= 20
+            weight = 1.0 if 11 <= data <= 29 else 0.5 if 51 <= data <= 69 else 0.0
+            if weight:
+                body = line[7:]
+                for i in range(0, len(body) - 1, 2):
+                    obj = base36_to_int(body[i], body[i + 1])
+                    if obj and obj != lnobj:
+                        notes += weight
+    return notes
 
 
 def header(title: str, artist: str, genre: str, *, player: int, bpm, playlevel: int,
@@ -421,7 +458,6 @@ def chart_7key_random() -> Chart:
     for lane in range(1, 8):
         tail.append("#%03d%02d:%s" % (4, SP7[lane], K[lane] + "00" * 15))
     c._tail = tail  # type: ignore[attr-defined]
-    c._branch_notes = branch_a.expected_notes()  # type: ignore[attr-defined]
     return c
 
 
@@ -602,15 +638,16 @@ def generate(out_root: Path, seed: int) -> tuple[Output, list[dict]]:
     syn = out_root
 
     def chart_file(folder: Path, name: str, chart: Chart, scenario: str, encoding: str = "utf-8",
-                   text: str | None = None, notes: float | None = None) -> None:
+                   text: str | None = None) -> None:
         p = folder / name
-        write_text(p, text if text is not None else chart.render(getattr(chart, "_tail", None)), encoding)
+        body = text if text is not None else chart.render(getattr(chart, "_tail", None))
+        write_text(p, body, encoding)
         out.add(p, scenario)
         summary.append({
             "scenario": scenario,
             "chart": p.relative_to(out_root).as_posix(),
             "encoding": encoding,
-            "expected_notes": chart.expected_notes() if notes is None else notes,
+            "expected_notes": songmanage_notes(body),
         })
 
     # --- ascii_basic: every mode + feature chart ----------------------------
@@ -621,9 +658,7 @@ def generate(out_root: Path, seed: int) -> tuple[Output, list[dict]]:
     chart_file(folder, "7key_base62.bms", chart_7key_base62(), "base62")
     chart_file(folder, "7key_lnobj.bms", chart_7key_lnobj(), "lnobj")
     chart_file(folder, "7key_scroll.bms", chart_7key_scroll(), "scroll")
-    rnd = chart_7key_random()
-    chart_file(folder, "7key_random.bms", rnd, "random",
-               notes=rnd.expected_notes() + rnd._branch_notes)  # type: ignore[attr-defined]
+    chart_file(folder, "7key_random.bms", chart_7key_random(), "random")
     chart_file(folder, "5key.bms", chart_5key(), "mode_5key")
     chart_file(folder, "9key.pms", chart_9key_pms(), "mode_9key")
     chart_file(folder, "10key_dp.bms", chart_10key_dp(), "mode_10key")
@@ -666,7 +701,7 @@ def generate(out_root: Path, seed: int) -> tuple[Output, list[dict]]:
     full = chart_truncated_source().render()
     cut = full.rstrip("\r\n")[:-5]  # last data line ends mid-object, no trailing newline
     chart_file(folder, "truncated.bms", chart_truncated_source(), "broken_truncated", text=cut)
-    chart_file(folder, "empty.bms", Chart([]), "broken_empty", text="", notes=0)
+    chart_file(folder, "empty.bms", Chart([]), "broken_empty", text="")
 
     return out, summary
 
@@ -683,7 +718,8 @@ def write_manifest(out: Output, seed: int, summary: list[dict]) -> Path:
         "files": files,
     }
     p = out.root / "manifest.json"
-    p.write_text(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    # bytes, not write_text: newline translation would make the manifest hash differ per OS
+    p.write_bytes((json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8"))
     return p
 
 

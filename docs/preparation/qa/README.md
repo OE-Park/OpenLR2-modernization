@@ -29,8 +29,10 @@ python3 docs/preparation/qa/make_synthetic_charts.py --out /path/to/qa_songs --s
 - 같은 seed면 결과 바이트가 동일하다. 파일 안에 시각 정보를 넣지 않는다.
   seed는 BGA 프레임 색과 BGM 음열만 바꾼다. chart 텍스트와 키음 음높이는 seed와 무관하다.
 - 끝에 시나리오별 파일 수·바이트와 chart별 예상 노트 수를 표로 찍는다.
-  예상 노트 수는 `LR2_songmanage.cpp` `ParseBMSMETA`의 셈법(3060-3081행: 가시 채널 11-29는 1개,
-  LN 채널 51-69는 객체당 0.5)을 따른 값이라 선곡 화면의 노트 수와 대조할 수 있다.
+  예상 노트 수는 생성한 chart 텍스트에 `LR2_songmanage.cpp` `ParseBMSMETA`(2991-3082행)의 셈법을 그대로 적용한 값이라
+  선곡 화면의 노트 수와 대조할 수 있다. 셈법: `#IF 1` 외 분기 무시, `#LNOBJ` 객체 제외,
+  채널 51-69는 -40·31-49는 -20으로 옮긴 뒤 11-29의 객체를 1개씩 센다(LN 양 끝·숨은 노트도 1개, 0.5 분기는 도달 불가).
+  예: `7key_core` 75, `7key_lnobj` 19, `7key_random` 31(공통 앞 8 + 분기 16 + 공통 뒤 7).
 - 검증은 `python3 -I`(격리 모드)로도 같은 결과가 나와야 한다. 이 문서의 실행 결과는 전부 `-I`로 얻었다.
 
 ### 출력 구조
@@ -250,6 +252,8 @@ python3 docs/preparation/qa/make_skin_resolution_variants.py --lr2-root /path/to
   BMP는 `BM` 시그니처·파일 크기·오프셋 54·헤더 40·24bpp·BI_RGB·행 바이트×높이 일치 확인,
   chart는 선언한 인코딩(UTF-8 또는 CP932)으로 디코드 확인, CP932 판이 UTF-8로는 디코드되지 않음 확인.
 - 같은 seed 재실행 두 번: manifest 완전 동일. seed 7: WAV/BMP 20개만 달라지고 chart 텍스트는 동일.
+- (1.1.0) manifest를 바이트로 써서 OS 개행 변환 없음(LF만) 확인. 1.0.0과 생성 파일 127개의 SHA-256 동일, manifest의
+  `expected_notes`·`generator_version`만 바뀜. 노트 수 셈법 정정은 PR #1 리뷰 지적 반영
 - 기존 출력에 `--force` 없이 실행 → 종료 2. `--force` 실행 → 생성 폴더·manifest만 교체, 다른 파일 유지.
 - 기본 경로(`<repo>/.local/qa/synthetic`) 실행 후 `git status --short`에 `.local` 아래 항목 없음.
 - 정적 참조 검사: 모든 `#xxxyy:` 줄 데이터 길이 짝수, 채널 08/09/SC/04/06/07/키음 객체가 전부 정의됨,
