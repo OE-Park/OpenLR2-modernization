@@ -6,6 +6,8 @@
 
 사용자 목표는 Windows 11 x64·Windows on ARM·macOS arm64 완전 지원, 메모리 누수 감소, 4K 지원이다.
 사용자는 기존 LR2 호환을 우선하고 Windows x64 기준을 확보한 다음 ARM64·macOS 백엔드를 분리하는 방향을 선택했다.
+(2026-10-27) Windows ARM64 구현은 가장 후순위로 미룬다. 로컬 빌드 툴체인은 Visual Studio 2026 Community다.
+(2026-10-27) 오디오 환경이 달라지면 랭킹 커뮤니티가 기록을 거부할 수 있으므로 macOS 빌드는 인터넷 랭킹(레거시 LR2IR·CustomIR)을 제거한다. 세부 조건은 [설계 초안](docs/superpowers/specs/2026-10-27-platform-modernization-design.md)의 IR 행과 ROADMAP IR-01.
 지원 완료는 [인수 기준](docs/preparation/ACCEPTANCE.md)의 플랫폼별 실측 결과로 판단한다.
 
 ## 작업 기준
@@ -33,6 +35,8 @@
 - (2026-10-27 추가) upstream 브랜치 `LR2Beta3-v100201`이 원본 디컴파일 소스+주소 CSV임을 확인하고 Ghidra 앞 단계로 편입: [REA 절차 단계 0](docs/preparation/REA-RUNBOOK.md). 스킨 목록 malloc/realloc 구조가 원본 그대로임을 소스 비교로 확인: [현황 조사](docs/preparation/BASELINE.md).
 - (2026-10-27 추가) Windows ARM64 정적 감사: [ARM64-AUDIT](docs/preparation/ARM64-AUDIT.md). DxLib 컴파일 장애는 `DxWindow.cpp` 한 블록, 빌드 장애는 CMake 포인터 분기와 ARM64 FMOD 부재.
 - (2026-10-27 추가) WIN-01 실행 스크립트 [docs/preparation/scripts/](docs/preparation/scripts/README.md): macOS pwsh 구문 검사·dry-run만 통과, Windows 실행 전. QA-01 합성 자료 생성기 [docs/preparation/qa/](docs/preparation/qa/README.md): 127파일 결정성 검증, 어느 엔진에도 아직 로드 안 함.
+- (2026-10-27 추가) VS 2026 Community 기준 전환: `CMakePresets.json`에 `windows-vs2026-x64`·`-x64-asan`·`-x86` configure preset과 build preset 추가(기존 preset 상속, 생성기만 `Visual Studio 18 2026`). WIN-01 스크립트 기본 preset 변경, VS 버전 범위를 preset 생성기에서 도출. CI·vcxproj(v143)는 그대로. Windows에서 configure 미실행.
+- (2026-10-27 추가) BMS 생태계 원천 자료·관례 정리: [ECOSYSTEM-SOURCES](docs/preparation/ECOSYSTEM-SOURCES.md). 원본 LR2의 상용 음원 검사(키음 60초 초과·0 note → IR·녹화·MP3 차단)를 소스에서 확인했고, CustomIR 전송은 이 검사를 거치지 않는 것을 정적 조사로 발견(실행 미확인).
 - (2026-10-27 추가) `LR2_100201.zip`의 MD5·SHA1·SHA-256·크기가 Mac 사본과 Windows 쪽 해시 출력에서 일치. Windows 11 x64 기준 빌드 머신은 별도 데스크톱(SSH 준비 중).
 
 ## 실제 검증과 남은 것

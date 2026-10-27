@@ -61,13 +61,23 @@ SD/HD/FHD/UHD 매핑과 custom dimension 검증을 하나의 명세로 모은다
 
 ## 추가 요구사항 (2026-10-27, 사용자 지시)
 
-사용자가 세 가지를 추가했다. 아래 "현재 상태"는 소스 정적 조사이고 실행 검증이 아니다. 상세 설계는 아직 승인되지 않았다.
+사용자가 세 가지를 추가했고, 같은 날 IR 제외 조건을 더했다. 아래 "현재 상태"는 소스 정적 조사이고 실행 검증이 아니다. 상세 설계는 아직 승인되지 않았다.
 
 | 요구 | 현재 상태 (소스 근거) | 설계에서 정할 것 |
 |---|---|---|
 | **런처.** [LR2Nexus](https://github.com/Unengine/LR2Nexus) (GPL-3.0)를 참고해 개발 | LR2Nexus는 C# .NET 9 + Avalonia 12 데스크톱 앱(2026-07-12 HEAD `8de8053`, cs 42개). `config.xml`을 Shift-JIS로 읽고 쓰며(`XmlReflectionEngine.cs:23`), `I18nManager.cs`로 UI 다국어, NAudio로 오디오 장치 열거, SQLite로 점수 DB 접근. 저장소 README는 "vanilla LR2·OpenLR2 모두 지원". 현재 OpenLR2 저장소에는 런처 코드가 없고 README가 외부 런처 둘을 소개만 한다 | (1) 형태: 별도 프로세스 런처 vs 엔진 내장 설정 화면. (2) 언어·툴킷: LR2Nexus 코드를 가져오면 그 부분은 GPL-3.0이고 OpenLR2에는 최상위 LICENSE가 아직 없어 **라이선스 결정이 선행**된다. 참고만 하고 새로 쓰면 설정 스키마·기능 목록만 가져온다. (3) 세 플랫폼에서 같은 런처를 쓸지(Avalonia는 macOS 가능) |
 | **다국어 지원.** 원본이 유니코드 기반이 아님 | 포크는 내부를 UTF-8로 바꿨다: 매니페스트 `activeCodePage=UTF-8`, `Main.cpp:268-269` DxLib 문자 코드 UTF-8, 스킨 폰트 `DX_CHARSET_UTF8`(`LR2_skinload.cpp:1004`). 원본 호환을 위해 CP932 변환이 남아 있고 `ansi2utf/utf2ansi`는 932 외 코드페이지를 assert로 거부(`En_fileutil.cpp:103,113`), 곡 DB CRC는 `cp_user_had_in_lr2 = 932` 고정(`:594`). `932` 리터럴 37곳. `config.system.language`는 XML에 읽고 쓰기만 하고 소비처가 없다. UI 문자열은 스킨이 그리므로 엔진 자체 문구는 적고, 오류 로그는 일본어 하드코딩 | (1) "다국어"의 범위: 파일명·경로·곡 메타의 임의 언어, IME 검색 입력, 스킨 폰트의 CJK 렌더, 엔진 메시지 번역, 런처 UI 번역. (2) 기존 점수·곡 DB의 CP932 기반 해시 호환을 어디까지 유지할지(한국어 로케일 사용자 DB는 원본에서 이미 다른 CRC). (3) 비Windows의 iconv 경로 |
+| **인터넷 랭킹(IR) 제외 조건.** 오디오 라이브러리·출력 경로를 바꾸면 지연 등 환경이 달라져 랭킹 커뮤니티가 기록을 거부할 수 있다. 사용자 결정: **macOS 빌드는 IR 기능을 제거**한다 | IR 경로 두 개. (a) 레거시 LR2IR: `LR2_ir.cpp`가 `dream-pro.info/~lavalse/LR2IR/2/*.cgi`로 송수신, 파일 첫 줄에 "deprecated", README는 LR2IR 종료를 명시. (b) CustomIR: `LR2files/CustomIRs/<모듈>/`의 네이티브 모듈을 로드(`LR2_customir.cpp:102`), `SendScoreV1`로 점수 전송(`LR2_customir_api.h:286`), 선곡·결과 화면이 랭킹 표시에 사용(`Scene02_Songselect.cpp:1823`, `Scene05_Result.cpp:201`). 알려진 모듈은 Bokutachi. 서버에는 `openlr2::clientName`·`versionCode`가 간다(`LR2_ir.cpp:556`). 원본 LR2는 FMOD Ex(`fmodex.dll`), 포크 Windows는 FMOD Core 2.03이라 "원본과 같은 오디오"는 이미 아니다. 현재 기준 환경은 포크 Windows x64 + FMOD 2.x | (1) 제거 방식: 빌드 옵션으로 IR 코드(레거시 LR2IR·CustomIR 로더·랭킹 표시)를 컴파일에서 빼는 것을 권장. 실행 중 설정 끄기는 사용자가 다시 켤 수 있어 약하다. (2) 기준 오디오 정의: "IR 허용 = Windows + FMOD Core 2.x(WASAPI/ASIO)"로 둘지. (3) Windows ARM64(같은 FMOD, 다른 아키텍처·드라이버 경로)의 IR 허용 여부는 미결. (4) IR이 없는 빌드에서 로컬 점수 DB는 그대로 저장할지, 다른 오디오 환경 점수임을 구분할지. (5) 랭킹 화면 요소가 있는 스킨에서 IR 부재를 명확히 표시 |
 | **ASIO (Windows 한정)** | FMOD 출력 선택이 이미 있다: `config.sound.output` 0/1=WASAPI, 2=ASIO(`En_audio.cpp:1069-1080`), 실패 시 AUTODETECT 폴백, `output==2`면 DSP 비활성(`LR2_configsave.cpp:1050`). 드라이버는 `config.sound.driver` 인덱스. 설정 UI에서 고르는 수단은 미확인(런처 역할) | (1) ASIO 장치 열거·선택을 런처/설정 화면 중 어디서 할지. (2) 버퍼 크기·지연 측정 기준. (3) ARM64 Windows에서 FMOD ASIO 출력 가용성(미확인). (4) macOS는 CoreAudio로 명시 미지원 처리 |
+
+### IR 관련 외부 의견 (2026-10-27 웹 조사)
+
+공식 정책이 아니라 커뮤니티 논의·개인 블로그다. 날짜가 오래된 자료가 섞여 있다.
+
+- LR2IR은 2026-05-31 종료됐고, OpenLR2 소스 공개도 같은 날이다([NamuWiki](https://en.namu.wiki/w/Lunatic%20Rave%202), [LR2 unofficial site](https://lr2.sakura.ne.jp/)). 현재 OpenLR2의 실사용 IR은 CustomIR 모듈 [BokutachiIR_OpenLR2](https://github.com/marysiamzawka/BokutachiIR_OpenLR2)다. [BMS Community Resources](https://bms-community.github.io/resources/)에는 Bokutachi 지원 클라이언트가 LR2·LR2oraja·beatoraja(PMS 한정)로 적혀 있다.
+- 판정 체계가 다른 클라이언트의 점수를 같은 랭킹에 섞는 것에 대해 beatoraja 메인테이너는 "다른 무대의 스코어를 비교하는 것은 경쟁적으로 큰 의미가 없다", "IR 운영 부담이 이점보다 크다"고 했다. 다른 참가자들도 "같은 본체에서 두 판정을 쓰면 IR에서 구분이 필수"라고 했다([beatoraja Discussion #668](https://github.com/exch-bms2/beatoraja/discussions/668)). 거기서 논의된 차이는 판정 폭·게이지·LN·TOTAL이었고, 오디오 백엔드는 다뤄지지 않았다.
+- 비공식 Q&A: 공식 배포가 아닌 빌드(예: LR2oraja)는 beatoraja용 IR에 접속할 수 없다. 기본 OpenAL 출력은 지연이 큰 편이고 PortAudio로 바꾸면 줄어들 수 있다. 지연은 "개인 환경 의존이 심하다"([beatoraja 非公式Q&A](https://mirai-yokohama.sakura.ne.jp/bms/beatoraja/)). 즉 IR 운영자는 **클라이언트 빌드 단위**로 접속을 통제하고, 오디오 지연은 사용자 오프셋 보정 문제로 다뤄진다.
+- 해석: 커뮤니티가 랭킹을 분리하는 직접 기준은 판정·게이지 로직과 클라이언트 식별이다. 오디오 백엔드 교체만으로 거부한 사례는 찾지 못했다. 그래도 IR 운영자가 클라이언트 단위로 허용 여부를 정하므로, 검증 기준 환경과 다른 macOS 빌드에서 IR을 빼는 결정은 운영자 판단을 앞지르지 않는 보수적 선택이다.
 
 ## 이번 준비 범위와 이후 범위
 
