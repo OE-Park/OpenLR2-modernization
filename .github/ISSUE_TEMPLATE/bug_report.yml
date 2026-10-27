@@ -1,0 +1,62 @@
+name: Bug report / 버그 / 不具合
+description: Crash, wrong behavior, or difference from original LR2 / 크래시·오동작·원본 LR2와 다른 동작 / クラッシュ・誤動作・オリジナル LR2 との差異
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened / 증상 / 症状
+      description: Steps, expected, actual / 재현 순서·기대·실제 / 再現手順・期待・実際
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform / 플랫폼 / プラットフォーム
+      options:
+        - Windows 11 x64
+        - Windows 10 x64
+        - Windows on ARM (x64 emulation)
+        - macOS arm64
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: build
+    attributes:
+      label: OpenLR2 build / 빌드 / ビルド
+      description: Release name or commit, x64/x86, Release/Debug
+    validations:
+      required: true
+  - type: dropdown
+    id: audio
+    attributes:
+      label: Audio output / 오디오 출력 / オーディオ出力
+      options:
+        - WASAPI
+        - ASIO
+        - Unknown
+  - type: input
+    id: display
+    attributes:
+      label: Resolution / skin / 해상도·스킨 / 解像度・スキン
+      description: e.g. 3840x2160, #RESOLUTION 3, skin name
+  - type: input
+    id: chart
+    attributes:
+      label: Chart md5 or name / 차트 / 譜面
+      description: Only if chart-specific. No download links to copyrighted material / 저작권 자료 링크 금지 / 著作権素材へのリンク禁止
+  - type: dropdown
+    id: original
+    attributes:
+      label: Same on original LR2 beta3 100201? / 원본 LR2에서도? / オリジナル LR2 でも?
+      options:
+        - Not tested
+        - "Yes, same"
+        - "No, OpenLR2 only"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / 로그 / ログ
+      description: LR2files/Log.txt etc. Remove personal paths / 개인 경로 제거 / 個人パスは削除
+      render: text
