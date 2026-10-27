@@ -140,7 +140,10 @@ pwsh -ExecutionPolicy Bypass -File docs\preparation\scripts\win01-baseline.ps1 -
   이 실행은 `Log.txt`를 쓰지 않았고 `Score\TEST.db`도 바꾸지 않았다(`config.xml`·`midi.xml`·`song.db`·`SkinCustomize\*.xml`만 갱신)
 - 런처가 만든 새 DB에서 포크가 `ハッシュが不正です。プレイヤースコアデータを初期化しました。`를 남기는 것(`LR2/LR2_statlong.cpp:129-151`)은 회귀가 아니다.
   런처는 `player` 행을 `scorehash` NULL·통계 NULL로 만들고, `scorehash`는 플레이 후 `UpdatePlayerStat`만 쓴다. upstream 원본 디컴파일 소스(`LR2Beta3-v100201` `583a385`, `LR2f.cpp`)의
-  `MakePlayerStatHash`와 초기화 분기가 포크와 같다. 근거는 DB 행 조회와 소스 비교이며, 원본 실행 로그로는 확인하지 못했다
+  `MakePlayerStatHash`와 초기화 분기가 포크와 같다. 근거는 DB 행 조회와 소스 비교다
+- 원본 실행 로그로는 이 메시지를 확인할 수 없다. `config.xml`을 `outputlog=1`로 바꿔 원본을 다시 돌리면 `Log.txt`(273줄)가 생기지만 첫 줄이 `システムの情報を出力します`(DxLib 3.01a 초기화)다.
+  원본 `Main.cpp`는 `ReadPlayerScore`(171행)를 `DxLib_Init`(265행)보다 먼저 부르고, 3.01a는 초기화 때 로그를 새로 시작하므로 그 앞의 설정 로드·해시 메시지는 남지 않는다
+- 관찰: 포크(새 DxLib)는 `outputlog=0`이어도 `Log.txt`를 쓰고 초기화 전 메시지를 남긴다. 원본은 `outputlog=0`이면 `Log.txt`를 쓰지 않는다. 테스트 폴더 `config.xml`은 `outputlog=1`로 둔다(원래 값 백업 `config.xml.before-outputlog`)
 - 미검증: 게임플레이·입력·오디오 출력(QA-01·ASIO-01 범위), 원본과의 동작 비교
 
 ## update-readme-status.py
