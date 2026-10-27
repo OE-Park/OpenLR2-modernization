@@ -5884,7 +5884,7 @@ extern	int		Graphics_D3D9_SetupSubBackBuffer( void )
 			DWORD UseAdapterNumber ;
 
 			// 使用するディスプレイアダプターを決定
-			UseAdapterNumber = GSYS.Screen.ValidUseDisplayIndex ? ( DWORD )GSYS.Screen.UseDisplayIndex : D_D3DADAPTER_DEFAULT ;
+			UseAdapterNumber = Direct3D9_GetUseAdapterNumber() ;
 
 			switch( GSYS.Screen.UserScreenImagePixelFormat )
 			{
@@ -6435,7 +6435,7 @@ extern int Graphics_D3D9_Device_Create()
 		HMONITOR      hMonitor ;
 		D_MONITORINFOEXW MonitorInfoEx ;
 
-		hMonitor = ( HMONITOR )Direct3D9_GetAdapterMonitor( GSYS.Screen.ValidUseDisplayIndex ? ( DWORD )GSYS.Screen.UseDisplayIndex : D_D3DADAPTER_DEFAULT ) ;
+		hMonitor = ( HMONITOR )Direct3D9_GetAdapterMonitor( Direct3D9_GetUseAdapterNumber() ) ;
 
 		_MEMSET( &MonitorInfoEx, 0, sizeof( MonitorInfoEx ) ) ;
 		MonitorInfoEx.cbSize = sizeof( MonitorInfoEx ) ;
@@ -6562,7 +6562,7 @@ extern int Graphics_D3D9_Device_Create()
 		DWORD UseAdapterNumber ;
 
 		// 使用するディスプレイアダプターを決定
-		UseAdapterNumber = GSYS.Screen.ValidUseDisplayIndex ? ( DWORD )GSYS.Screen.UseDisplayIndex : D_D3DADAPTER_DEFAULT ;
+		UseAdapterNumber = Direct3D9_GetUseAdapterNumber() ;
 
 		// 画面のフォーマットの取得
 		Direct3DSurface9_GetDesc( GD3D9.Device.Screen.BackBufferSurface, &SurfaceDesc ) ;
@@ -30559,7 +30559,7 @@ extern	int		Graphics_Hardware_D3D9_Shader_GetValidShaderVersion_PF( void )
 //		return 0 ;
 
 	// 能力を取得
-	Direct3D9_GetDeviceCaps( ( DWORD )( GSYS.Screen.ValidUseDisplayIndex ? GSYS.Screen.UseDisplayIndex : D_D3DADAPTER_DEFAULT ), D_D3DDEVTYPE_HAL, &DevCaps ) ;
+	Direct3D9_GetDeviceCaps( ( DWORD )Direct3D9_GetUseAdapterNumber(), D_D3DDEVTYPE_HAL, &DevCaps ) ;
 
 	if( ( DevCaps.VertexShaderVersion & 0xffff ) < 0x200 &&
 		( DevCaps.PixelShaderVersion  & 0xffff ) < 0x200 )
