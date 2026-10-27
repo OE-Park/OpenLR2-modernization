@@ -37,7 +37,8 @@
 - (2026-10-27 추가) WIN-01 실행 스크립트 [docs/preparation/scripts/](docs/preparation/scripts/README.md): macOS pwsh 구문 검사·dry-run만 통과, Windows 실행 전. QA-01 합성 자료 생성기 [docs/preparation/qa/](docs/preparation/qa/README.md): 127파일 결정성 검증, 어느 엔진에도 아직 로드 안 함.
 - (2026-10-27 추가) VS 2026 Community 기준 전환: `CMakePresets.json`에 `windows-vs2026-x64`·`-x64-asan`·`-x86` configure preset과 build preset 추가(기존 preset 상속, 생성기만 `Visual Studio 18 2026`). WIN-01 스크립트 기본 preset 변경, VS 버전 범위를 preset 생성기에서 도출. CI·vcxproj(v143)는 그대로. Windows에서 configure 미실행.
 - (2026-10-27 추가) BMS 생태계 원천 자료·관례 정리: [ECOSYSTEM-SOURCES](docs/preparation/ECOSYSTEM-SOURCES.md). 원본 LR2의 상용 음원 검사(키음 60초 초과·0 note → IR·녹화·MP3 차단)를 소스에서 확인했고, CustomIR 전송은 이 검사를 거치지 않는 것을 정적 조사로 발견(실행 미확인).
-- (2026-10-27 추가) `LR2_100201.zip`의 MD5·SHA1·SHA-256·크기가 Mac 사본과 Windows 쪽 해시 출력에서 일치. Windows 11 x64 기준 빌드 머신은 별도 데스크톱(SSH 준비 중).
+- (2026-10-27 추가) `LR2_100201.zip`의 MD5·SHA1·SHA-256·크기가 Mac 사본과 Windows 쪽 해시 출력에서 일치. Windows 11 x64 기준 빌드 머신은 별도 데스크톱(SSH 준비 완료).
+- (2026-10-27 추가) WIN-01 1차 실행(Windows 11 x64, VS 2026 18.11, 커밋 `29044f2`): configure/build·exe/DLL x64 PE 검사·원본 추출·스테이징 통과. 첫 기동은 스코어 DB 없음 오류창에서 멈췄고, 스크립트가 이를 Passed로 잘못 기록한 결함을 숨김 창 열거로 수정. 원본 런처로 플레이어 등록 후 콘솔 세션에서 타이틀 화면 도달·정상 종료(exit 0) 확인. 상세: [scripts/README 검증 상태](docs/preparation/scripts/README.md).
 
 ## 실제 검증과 남은 것
 
@@ -54,7 +55,7 @@
 | upstream 원본 소스 브랜치 ↔ ZIP 바이너리 | CSV 주소 범위가 `.text` 안, PE 타임스탬프 2010-02-01. 정황 일치, 바이트 동일성은 미검증 |
 | Windows ARM64 정적 감사 | DxLib·CMake·런타임 DLL 소스 조사 완료. 빌드·실행 미실행 |
 | Ghidra 복원·프로그램 digest 일치 | 미검증 |
-| Windows x64 빌드·원본 비교 | 미실행 |
+| Windows x64 빌드·기동 | configure/build exit 0, `OpenLR2_x64.exe`·`fmod.dll` Machine 0x8664, 콘솔 세션 타이틀 화면 도달(사용자 육안)·exit 0. 게임플레이·원본 비교 미검증 |
 | Windows ARM64 네이티브 빌드·입력·오디오 | 미실행 |
 | macOS arm64 빌드·입력·오디오 | 미실행 |
 | 누수량·수정·반복 측정 | 미실행 |
